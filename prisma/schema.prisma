@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+model Message {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId     String
+  room      String
+  roomId    String     @db.ObjectId
+  replyTo   Message?   @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replyToId String?    @db.ObjectId
+  replies   Message[]  @relation("ReplyTo")
+  reactions MessageReaction[]
+  file      File?
+}
+
+model MessageReaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  emoji     String
+  createdAt DateTime @default(now())
+  userId    String
+  message   Message  @relation(fields: [messageId], references: [id])
+  messageId String   @db.ObjectId
+
+  @@unique([userId, messageId, emoji])
+}
+
+model File {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  url       String
+  createdAt DateTime @default(now())
+  userId      String
+  message   Message  @relation(fields: [messageId], references: [id])
+  messageId String   @unique @db.ObjectId
+}
+
+// Additional models to support the chat system
+
+model ChatChannel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  createdBy   String
+  isPrivate   Boolean  @default(false)
+  members     String[] @default([])
+  admins      String[] @default([])
+  metadata    Json?
+  avatar      String?
+  lastActive  DateTime @default(now())
+
+}
+
+model ChatUser {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique
+  name          String
+  avatar        String?
+  status        String   @default("offline") // "online", "away", "busy", "offline"
+  lastSeen      DateTime @default(now())
+  channels      String[] @default([])
+  preferences   Json?    // User preferences for notifications, themes, etc.
+  blockedUsers  String[] @default([])
+  deviceTokens  String[] @default([]) // For push notifications
+
+}
+
+model ChatAttachment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  messageId   String
+  fileName    String
+  fileType    String
+  fileSize    Int
+  url         String
+  thumbnail   String?
+  uploadedAt  DateTime @default(now())
+  uploadedBy  String
+  metadata    Json?
+  
+  @@index([messageId])
+}

@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model ChatMessage {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  senderId        String
+  senderName      String
+  content         String
+  recipientId     String?
+  channelName     String
+  recipientName   String?
+  recipientAvatar String?
+  timestamp       DateTime  @default(now())
+  status          String    @default("sent") // "sending", "sent", "delivered", "read", "failed"
+  type            String    @default("text") // "text", "ai", "effect", "context", "spatial", "pdf", "img", "video"
+  sentiment       String? // "neutral", "positive", "negative", "excited", "curious"
+  translation     Json? // { text: string, language: string }
+  aiGenerated     Boolean   @default(false)
+  contextData     Json? // { type: string, data: any }
+  effect          String? // "pulse", "glow", "float", "sparkle", "wave", "3d"
+  priority        String    @default("normal") // "normal", "high", "urgent"
+  reactions       Json? // Array<{ emoji: string, userId: string }>
+  bookmarked      Boolean   @default(false)
+  spatial         Json? // { x: number, y: number, z: number }
+  metadata        Json? // For any additional data
+  attachments     Json? // For file attachments
+  threadId        String? // For threaded conversations
+  edited          Boolean   @default(false)
+  editHistory     Json? // Array of previous versions
+  mentions        Json? // Array of user IDs mentioned
+  tags            String[]  @default([])
+  readBy          String[]  @default([])
+  expiresAt       DateTime?
+
+  @@index([channelName])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([threadId])
+  @@index([type])
+}
+
+// Additional models to support the chat system
+
+model ChatChannel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  createdBy   String
+  isPrivate   Boolean  @default(false)
+  members     String[] @default([])
+  admins      String[] @default([])
+  metadata    Json?
+  avatar      String?
+  lastActive  DateTime @default(now())
+}
+
+model ChatUser {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @unique
+  name         String
+  avatar       String?
+  status       String   @default("offline") // "online", "away", "busy", "offline"
+  lastSeen     DateTime @default(now())
+  channels     String[] @default([])
+  preferences  Json? // User preferences for notifications, themes, etc.
+  blockedUsers String[] @default([])
+  deviceTokens String[] @default([]) // For push notifications
+}
+
+model ChatAttachment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  messageId  String
+  fileName   String
+  fileType   String
+  fileSize   Int
+  url        String
+  thumbnail  String?
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+  metadata   Json?
+
+  @@index([messageId])
+}
