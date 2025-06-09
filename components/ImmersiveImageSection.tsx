@@ -114,7 +114,7 @@ export default function ImmersiveImageSection() {
       >
         <Image
           src="/relaxing-pattern.jpg"
-          alt="miracle tsaka from dctfusion images"
+          alt="miracle tsaka from xtreme region images"
           layout="fill"
           objectFit="cover"
         />

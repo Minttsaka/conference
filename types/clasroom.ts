@@ -39,6 +39,10 @@ export interface User {
     id: string;
     hostId: string;
     topic: string;
+    user:any,
+    lesson?:any
+    type:"LESSON" | " MEETING"
+    agenda:boolean,
     description: string;
     duration: number;
     startDate: Date; // ISO 8601 format (e.g., "2025-04-07T22:00:00.000Z")

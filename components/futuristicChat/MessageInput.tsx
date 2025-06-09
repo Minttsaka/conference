@@ -2,30 +2,17 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, Dispatch, SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
 import { Paperclip, Send, X } from "lucide-react"
+import { Message } from "@/types/message"
 
-type Message = {
-  id: string
-  text: string
-  sender: string
-  timestamp: Date
-  isCurrentUser: boolean
-  reactions: { emoji: string; userId: string }[]
-  replyTo?: string
-  replyToSender?: string
-  file?: {
-    name: string
-    url: string
-  }
-}
 
 type MessageInputProps = {
   onSendMessage: (text: string, file?: { name: string; url: string }) => void
   onTyping: () => void
   replyingTo: Message | null
-  setReplyingTo: (message: Message | null) => void
+  setReplyingTo: Dispatch<SetStateAction<Message | null>>
 }
 
 export default function MessageInput({ onSendMessage, onTyping, replyingTo, setReplyingTo }: MessageInputProps) {

@@ -5,34 +5,36 @@ import type React from "react"
 import { useState, useEffect, SetStateAction, Dispatch } from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Clock, MessageSquare, Folder, BarChart2, Settings, Users, Atom, FileAudio, Presentation } from "lucide-react"
+import { Clock, MessageSquare, Folder, Atom, FileAudio, Presentation } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTheme } from "next-themes"
 import { TranscriptionDialog } from "./TranscriptionDialog"
 import { FilesDialog } from "../files/FilesDialog"
-import { FileItem } from "@/types/clasroom"
 import { SessionPayload } from "@/lib/session"
 import { initializeAgoraRTM } from "../demo/agora"
+import Logo from "../Logo"
 
 interface DimensionalSidebarProps {
   isChatOpen: boolean
   user:SessionPayload
-  classes:boolean
+  isAgenda:boolean,
   transcription:boolean
   setIsChatOpen: (open: boolean) => void
   setIsSlidesOpen: Dispatch<SetStateAction<boolean>>
   onRequestTranscription?: (enabled: boolean) => void
   channel:string
+  meetingType:"LESSON" | "MEETING"
 }
 
 export function DimensionalSidebar({ 
   user,
+  isAgenda,
   isChatOpen,
   channel,
   transcription, 
-  classes,
   setIsSlidesOpen,
   setIsChatOpen, 
+  meetingType,
   onRequestTranscription
 }: DimensionalSidebarProps) {
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null)
@@ -48,14 +50,12 @@ export function DimensionalSidebar({
   const isDark = theme === "dark"
 
   const [rtm, setRtm] = useState<any>(null)
-  const [channelName, setChannelName] = useState<string>("")
 
   useEffect(() => {
     const setupRTM = async () => {
       try {
-        setChannelName(channel)
 
-        const { rtm, channelName } = await initializeAgoraRTM(user, `${channel}file`)
+        const { rtm } = await initializeAgoraRTM(user, `${channel}file`)
 
         setRtm(rtm)
      
@@ -229,7 +229,7 @@ export function DimensionalSidebar({
               repeatType: "loop",
             }}
           >
-            <Atom className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-6 sm:w-6 text-indigo-600 dark:text-white" />
+            <Logo />
           </motion.div>
         </div>
 
@@ -249,6 +249,7 @@ export function DimensionalSidebar({
 
       {/* Navigation Icons */}
       <div className="flex flex-col space-y-4 xs:space-y-5 sm:space-y-6">
+        {isAgenda && 
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -281,10 +282,10 @@ export function DimensionalSidebar({
               side="right"
               className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-gray-200/50 dark:border-white/10 text-gray-800 dark:text-white"
             >
-              Schedule
+              Agenda
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>}
 
         <TooltipProvider>
           <Tooltip>
@@ -359,43 +360,7 @@ export function DimensionalSidebar({
           </Tooltip>
         </TooltipProvider>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button
-                className={getIconStyles("analytics").container}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => handleIconClick("analytics", e)}
-                onMouseEnter={() => setHoveredIcon("analytics")}
-                onMouseLeave={() => setHoveredIcon(null)}
-              >
-                <BarChart2 className={getIconStyles("analytics").icon} />
-
-                {activeIcon === "analytics" && (
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl xs:rounded-2xl border border-white/30 dark:border-white/30"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      rotate: [0, 90],
-                    }}
-                    transition={{ duration: 0.3 }}
-                  />
-                )}
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-gray-200/50 dark:border-white/10 text-gray-800 dark:text-white"
-            >
-              Analytics
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-       {classes && <TooltipProvider>
+       {meetingType ==="LESSON" && <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.button
@@ -471,43 +436,7 @@ export function DimensionalSidebar({
       </div>
 
       {/* Bottom section */}
-      <div className="mt-auto">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button
-                className={getIconStyles("settings").container}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => handleIconClick("settings", e)}
-                onMouseEnter={() => setHoveredIcon("settings")}
-                onMouseLeave={() => setHoveredIcon(null)}
-              >
-                <Settings className={getIconStyles("settings").icon} />
 
-                {activeIcon === "settings" && (
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl xs:rounded-2xl border border-white/30 dark:border-white/30"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      rotate: [0, 90],
-                    }}
-                    transition={{ duration: 0.3 }}
-                  />
-                )}
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-gray-200/50 dark:border-white/10 text-gray-800 dark:text-white"
-            >
-              Settings
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
       <TranscriptionDialog
         isOpen={isTranscriptionDialogOpen}
         onClose={() => setIsTranscriptionDialogOpen(false)}
@@ -518,7 +447,7 @@ export function DimensionalSidebar({
         isOpen={isFilesDialogOpen}
         user={user}
         rtm={rtm}
-        channelName={channelName}
+        channelName={channel}
         onClose={() => setIsFilesDialogOpen(false)}
         userId={user?.userId}
         userName={user?.name}

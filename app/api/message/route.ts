@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id, text, replyToId, fileUrl, fileName } = await req.json()
+    const { roomId, text, replyToId, fileUrl, fileName } = await req.json()
 
-    if (!id || !text) {
+    if (!roomId || !text) {
       return NextResponse.json({ error: "Room ID and text are required" }, { status: 400 })
     }
 
@@ -58,8 +58,9 @@ export async function POST(req: NextRequest) {
     const message = await prisma.message.create({
       data: {
         text,
+        id:roomId,
         userId:user.userId,
-        roomId:id,
+        roomId,
         ...(replyToId && {
           replyTo: {
             connect: {
@@ -67,26 +68,6 @@ export async function POST(req: NextRequest) {
             },
           },
         }),
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            agoraUid: true,
-          },
-        },
-        replyTo: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
       },
     })
 
@@ -106,29 +87,7 @@ export async function POST(req: NextRequest) {
       })
 
       // Fetch the message with the file
-      const messageWithFile = await prisma.message.findUnique({
-        where: {
-          id: message.id,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              agoraUid: true,
-            },
-          },
-          replyTo: {
-            include: {
-              user:,
-            },
-          },
-          file: true,
-        },
-      })
-
-      return NextResponse.json({ message: messageWithFile }, { status: 201 })
+      return NextResponse.json({ message: message }, { status: 201 })
     }
 
     return NextResponse.json({ message }, { status: 201 })

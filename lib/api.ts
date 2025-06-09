@@ -84,7 +84,6 @@ export async function recordAttendance(meetingId: string, action: "join" | "leav
 
 export async function getFiles(meetingId: string) {
 
-  console.log("meeting id",meetingId)
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_MAIN_APP_URL}/api/files/${meetingId}`)
 

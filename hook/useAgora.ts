@@ -10,16 +10,17 @@ import AgoraRTC, {
 } from 'agora-rtc-sdk-ng'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import type { Participant, Message, TranscriptionSettings } from "@/types/room"
+import type { Message, TranscriptionSettings } from "@/types/room"
 import { getOrCreateUserId } from '@/lib/userGn'
 import { enhanceTranscriptionAction } from '@/lib/action'
+import { publishMessage } from '@/components/demo/agora'
 
 export interface UseAgoraProps {
   appId: string
   channel: string
   token: string
   uid?: string
-  role : "audience" | "host"
+  isHost:boolean
 }
 
 export interface UseAgoraReturn {
@@ -43,7 +44,7 @@ export interface UseAgoraReturn {
 
 const VOLUME_THRESHOLD = 50 // Adjust this value based on testing
 
-export function useAgora({ appId, channel, token, uid, role = "host" }: UseAgoraProps): UseAgoraReturn {
+export function useAgora({ appId, channel, token, uid, isHost }: UseAgoraProps): UseAgoraReturn {
   const [client, setClient] = useState<IAgoraRTCClient | null>(null)
   const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null)
   const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null)
@@ -277,7 +278,7 @@ export function useAgora({ appId, channel, token, uid, role = "host" }: UseAgora
     }
   }, [client, appId, channel, token, uid, localAudioTrack, localVideoTrack, screenVideoTrack, setupEventListeners])
 
-  const leaveChannel = useCallback(async () => {
+  const leaveChannel = useCallback( async () => {
     if (!client) return
 
     try {

@@ -1,49 +1,88 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+// types
+export type UploadResult = {
+  success: boolean;
+  url?: string;
+  key?: string;
+  error?: string;
+};
 
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: process.env.NEXT_PUBLIC_S3_REGION_NAME!,
-  credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY!,
-  },
-})
+export async function uploadFileTos3(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<UploadResult> {
+  try {
+    // Step 1: Get a presigned URL from your backend
+    const presignedData = await getPresignedUrl(file.name, file.type);
 
-
-export async function uploadTos3(file: File) {
-
-    console.log("hello")
-    try {
-      const fileName = `${Date.now()}-${file.name.replace(/ /g, "_")}`;
-      const fileType = file.type; 
-  
-      console.log(fileName, fileType)
-  
-      if (!fileName || !fileType) {
-        console.error("failed since no name or type")
-      }
-  
-      // Create a unique file key
-      const key = `uploads/${Date.now()}-${fileName}`
-  
-      // Create the command to put an object in the S3 bucket
-      const putObjectCommand = new PutObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
-        Key: key,
-        ContentType: fileType,
-      })
-  
-      // Generate a pre-signed URL for the upload
-      const presignedUrl = await getSignedUrl(s3Client, putObjectCommand, { expiresIn: 3600 })
-  
-      return {
-        presignedUrl,
-        key,
-        fileName,
-        url: `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_S3_REGION_NAME}.amazonaws.com/${key}`,
-      }
-    } catch (error) {
-      console.error("Error generating presigned URL:", error)
+    if (!presignedData?.presignedUrl) {
+      return { success: false, error: "Failed to get upload URL" };
     }
+
+    // Step 2: Upload the file directly to S3
+    const xhr = new XMLHttpRequest();
+
+    const uploadPromise = new Promise<UploadResult>((resolve, reject) => {
+      xhr.open("PUT", presignedData.presignedUrl);
+      xhr.setRequestHeader("Content-Type", file.type);
+
+      if (onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve({
+            success: true,
+            url: presignedData.url,
+            key: presignedData.key,
+          });
+        } else {
+          reject(new Error(`Upload failed with status: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Upload failed due to network error"));
+      };
+
+      xhr.send(file);
+    });
+
+    return await uploadPromise;
+  } catch (error) {
+    console.error("Error uploading to S3:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error during upload",
+    };
   }
+}
+async function getPresignedUrl(
+  fileName: string,
+  fileType: string
+): Promise<{ presignedUrl: string; key: string; url: string } | null> {
+  try {
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fileName, fileType }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to get presigned URL");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error getting presigned URL:", error);
+    return null;
+  }
+}

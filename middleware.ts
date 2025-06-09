@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { decrypt } from "./lib/session"
-import { redirect } from "next/navigation"
 
 // All routes in the conference app require authentication except login
 const publicRoutes = ["/login"]

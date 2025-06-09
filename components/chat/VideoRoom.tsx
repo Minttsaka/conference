@@ -3,14 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import {
-  MessageSquare,
   ChevronLeft,
-  BarChart2,
-  Clock,
-  Folder,
-  Check,
-  Copy,
-  Mic,
   MicOff,
   Video,
   VideoOff,
@@ -25,6 +18,9 @@ import {
   FileText,
   ChevronRight,
   X,
+  Check,
+  Copy,
+  Mic,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -47,7 +43,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ParticipantsSection } from "./ParticipantsSection"
 import { SharedScreensSection } from "./SharedScreensSection"
 import { ConnectionStatusIndicator, ConnectionStatusIndicatorMobile } from "@/hook/useAgoraConnectionStatus"
-import { FileItem, Meeting } from "@/types/clasroom"
+import { Meeting } from "@/types/clasroom"
 import { getMeeting } from "@/lib/api"
 import ChatPage from "../demo/ChatMessage"
 import SlidePresentation from "../slides/SlidePresentation"
@@ -99,17 +95,14 @@ const { theme, setTheme } = useTheme()
   } = useAgora({
     appId: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     channel: meetingId,
-    token: token,
+    token: "token",
     uid: userId,
-    role:"audience"
+    isHost:meeting?.user.id === user.userId
   })
 
-  const { raisedHands,sendReaction, sendFile, files, reactions, toggleHand, pendingRequests } = useAgoraRTM({
-    appId: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+  const { raisedHands,sendReaction,toggleHand, pendingRequests } = useAgoraRTM({
     user,
     channel : meetingId,
-    uid: userId,
-    role :"audience",
   })
 
   useEffect(() => {
@@ -126,7 +119,6 @@ const { theme, setTheme } = useTheme()
       await navigator.clipboard.writeText(meetingId)
       setCopied(true)
       toast.success("Meeting ID copied to clipboard")
-      console.log("this si from copy", reactions)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       toast.error("Failed to copy Meeting ID")
@@ -306,16 +298,17 @@ const { theme, setTheme } = useTheme()
 
       {/* Left Sidebar */}
       {isOpen && 
-      <DimensionalSidebar 
-      channel={meetingId}
-      classes={true}
-      user={user} isChatOpen={isChatOpen} 
-      setIsSlidesOpen={setIsSlidesOpen}
-      setIsChatOpen={setIsChatOpen} 
-      transcription={meeting?.transcription as boolean} 
+      <DimensionalSidebar
+        isAgenda={meeting?.agenda as boolean}
+        channel={meetingId}
+        user={user} isChatOpen={isChatOpen} 
+        setIsSlidesOpen={setIsSlidesOpen}
+        setIsChatOpen={setIsChatOpen}
+        meetingType={meeting?.type as "LESSON" | "MEETING"}
+        transcription={meeting?.transcription as boolean} 
       />}
 
-    {isSlidesOpen && <SlidePresentation setIsSlidesOpen={setIsSlidesOpen}  />}
+    {isSlidesOpen && <SlidePresentation lesson={meeting?.lesson} setIsSlidesOpen={setIsSlidesOpen}  />}
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
@@ -607,8 +600,6 @@ const { theme, setTheme } = useTheme()
                       userAvatar=""
                       messages= {messages}
                       settings = {settings}
-                      reactions={reactions}
-                      sendReaction={sendReaction}
                       onMuteRemoteUser={()=>{}}
                       onToggleMaximize={()=>{}}
                       userName="You"
@@ -625,8 +616,6 @@ const { theme, setTheme } = useTheme()
                       remoteUsers={remoteUsers}
                       maximizedParticipant={maximizedParticipant}
                       raisedHands={raisedHands}
-                      reactions={reactions}
-                      sendReaction={sendReaction}
                       userId={userId}
                       handleToggleMaximize={handleToggleMaximize}
                       handleMuteRemoteUser={handleMuteRemoteUser}
@@ -636,8 +625,6 @@ const { theme, setTheme } = useTheme()
                       remoteUsers={remoteUsers}
                       maximizedParticipant={maximizedParticipant}
                       raisedHands={raisedHands}
-                      reactions={reactions}
-                      sendReaction={sendReaction}
                       userId={userId}
                       handleToggleMaximize={handleToggleMaximize}
                       handleMuteRemoteUser={handleMuteRemoteUser}

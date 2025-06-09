@@ -46,15 +46,21 @@ export default function HeroSection() {
       {/* Hero Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <p className="text-sm text-gray-400 mb-4">FROM DCTFUSION</p>
+          <p className="text-sm text-gray-400 mb-4">FROM XTREME REGION</p>
           <h1 className="text-5xl md:text-6xl font-light mb-8">
             Simple, Fast <span className="text-gray-500">, and Secure</span>
             <br />
             Live Video <span className="text-gray-500">Conference</span>
           </h1>
-          <Link href={'/start'} className="bg-white text-black rounded-full px-8 py-3 text-sm font-medium hover:bg-gray-100 transition-colors">
-            GET STARTED
-          </Link>
+          <div className="flex items-center justify-center gap-1">
+            <Link href={'/join'} className="bg-green-500 text-white rounded-full px-8 py-3 text-sm font-medium hover:bg-green-400 transition-colors">
+              Join a meeting
+            </Link>
+            <Link href={'/start'} className="bg-white text-black rounded-full px-8 py-3 text-sm font-medium hover:bg-gray-100 transition-colors">
+              Schedule
+            </Link>
+          </div>
+          
         </motion.div>
 
         {/* Credit Card Section */}

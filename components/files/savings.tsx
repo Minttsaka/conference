@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import {
   File,
   FilePlus,
   Download,
+  X,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -29,8 +30,11 @@ import { NewFileNotification } from "./NewFileNotification"
 import { FileViewer } from "./FileViewer"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { FileItem } from "@/types/clasroom"
+import { uploadFileTos3 } from "@/lib/aws"
+import { getFiles } from "@/lib/api"
+import { publishMessage } from "../demo/agora"
 import { SessionPayload } from "@/lib/session"
-import { useFileManager } from "@/hook/use-file-manager"
 
 interface FilesDialogProps {
   isOpen: boolean
@@ -43,72 +47,225 @@ interface FilesDialogProps {
 }
 
 export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, userName }: FilesDialogProps) {
- 
   const [activeTab, setActiveTab] = useState("all")
+  const [uploadingFiles, setUploadingFiles] = useState<
+    {
+      id: string
+      file: File
+      progress: number
+      status: "uploading" | "success" | "error"
+      error?: string
+    }[]
+  >([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [newFileNotification, setNewFileNotification] = useState<{
+    isVisible: boolean
+    file: FileItem | null
+  }>({
+    isVisible: false,
+    file: null,
+  })
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
   const [isFileListCollapsed, setIsFileListCollapsed] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [files, setFiles] = useState<FileItem[]>([])
+   const [isLoading, setIsLoading] = useState(true)
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null) 
+  const eventListenersSet = useRef(false)
 
-  const {
-    files,
-    isUploading,
-    uploadingFiles,
-    selectedFile,
-    newFileNotification,
-    setSelectedFile,
-    setNewFileNotification,
-    handleFileUpload,
-    handleDeleteFile,
-  } = useFileManager({ rtm, channelName, userName, isOpen })
+     const loadFiles = async () => {
+        try {
 
-  const filteredFiles = files.filter((file) => {
+          const response = await getFiles(channelName)
+    
+        if(response.success){
+          setFiles(() => [...response.data]);
+        }
+          
+        } catch (error) {
+          console.error(error)
+        }
+      }
+  
+    useEffect(() => {
+      setIsLoading(true)
+      loadFiles()
+      setIsLoading(false)
+    }, [isOpen])
+
+    const handleMessage = async (event: any) => {
+  
+      try {
+        const messageData = JSON.parse(event.message)
+  
+        if (messageData.type === "file") {
+
+          setFiles(prevFiles => [...prevFiles, messageData]);
+
+        } 
+      } catch (error) {
+        console.error("Error parsing message:", error)
+      }
+    }
+
+    useEffect(() => {
+        if (!rtm) return
+    
+          // Presence event handler
+        const handlePresence = (event: any) => {
+          if (event.eventType === "SNAPSHOT") {
+
+          } 
+        }
+    
+        // Status event handler
+        const handleStatus = (event: any) => {
+          console.log("RTM status changed:", event.state, event.reason)
+        }
+    
+        // Add event listeners
+        rtm.addEventListener("message", handleMessage)
+        rtm.addEventListener("presence", handlePresence)
+        rtm.addEventListener("status", handleStatus)
+    
+        eventListenersSet.current = true
+    
+        // Cleanup function
+        return () => {
+          if (rtm) {
+            rtm.removeEventListener("message",handleMessage)
+            rtm.removeEventListener("presence", handlePresence)
+            rtm.removeEventListener("status", handleStatus)
+          }
+        }
+      }, [rtm, channelName,isOpen])
+
+  // Select the first file when files are loaded or changed
+  useEffect(() => {
+    if (files.length > 0 && !selectedFile) {
+      setSelectedFile(files[files.length - 1])
+    }
+  }, [files, selectedFile,isOpen])
+
+  // Filter files based on active tab and search query
+  const filteredFiles = files?.filter((file) => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase())
 
-    switch (activeTab) {
-      case "images":
-        return file.type.startsWith("image/") && matchesSearch
-      case "documents":
-        return (
-          (file.type.includes("pdf") ||
-            file.type.includes("doc") ||
-            file.type.includes("txt") ||
-            file.type.includes("sheet") ||
-            file.type.includes("presentation") ||
-            file.type.includes("powerpoint") ||
-            file.name.endsWith(".pptx") ||
-            file.name.endsWith(".ppt")) &&
-          matchesSearch
-        )
-      case "media":
-        return (file.type.startsWith("video/") || file.type.startsWith("audio/")) && matchesSearch
-      default:
-        return matchesSearch
-    }
+    if (activeTab === "all") return matchesSearch
+    if (activeTab === "images") return file.type.startsWith("image/") && matchesSearch
+    if (activeTab === "documents")
+      return (
+        (file.type.includes("pdf") ||
+          file.type.includes("doc") ||
+          file.type.includes("txt") ||
+          file.type.includes("sheet") ||
+          file.type.includes("presentation") ||
+          file.type.includes("powerpoint") ||
+          file.name.endsWith(".pptx") ||
+          file.name.endsWith(".ppt")) &&
+        matchesSearch
+      )
+    if (activeTab === "media")
+      return (file.type.startsWith("video/") || file.type.startsWith("audio/")) && matchesSearch
+    return matchesSearch
   })
 
-  // Handle file input change
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files) {
-      handleFileUpload(files)
+  // Handle file upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+
+   try {
+    setIsUploading(true)
+    const selectedFiles = event.target.files
+    if (!selectedFiles || selectedFiles.length === 0) return
+
+    const uploadedFiles: { type: string ;name: string; url: string }[] = [];
+
+    for (const file of selectedFiles) {
+
+      const response = await uploadFileTos3(file);
+
+      const formattedData = {
+        type: file.type,
+        name: response?.key as string,
+        url: response?.url || "",
+      };
+
+      uploadedFiles.push(formattedData);
     }
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
+
+
+    if(uploadedFiles.length > 0){
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_MAIN_APP_URL}/api/files/${channelName}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            uploader:userName,
+            files:uploadedFiles
+          }),
+        });
+
+        if (!rtm) return
+
+          await publishMessage(rtm, `${channelName}file`, files)
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+
+      }
+   } catch (error) {
+    
+   } finally {
+    setIsUploading(false)
+   }
   }
 
-  // Handle focus on new file notification
+
+   if (isLoading) {
+        return (
+          <div className="flex min-h-screen items-center justify-center bg-gray-950">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-lg">Connecting to chat...</p>
+            </div>
+          </div>
+        )
+      }
+    
+
+  // Handle file deletion
+  const handleDeleteFile = (fileId: string) => {
+    // If the deleted file is the selected file, select another file
+    if (selectedFile && selectedFile.id === fileId) {
+      const fileIndex = files.findIndex((file) => file.id === fileId)
+      if (fileIndex > 0) {
+        setSelectedFile(files[fileIndex - 1])
+      } else if (files.length > 1) {
+        setSelectedFile(files[1])
+      } else {
+        setSelectedFile(null)
+      }
+    }
+
+  }
+
+  // Focus on new file when notification is clicked
   const handleFocusOnNewFile = (fileId: string) => {
     setNewFileNotification({ isVisible: false, file: null })
 
+    // Find and select the file
     const file = files.find((f) => f.id === fileId)
     if (file) {
       setSelectedFile(file)
     }
 
+    // Find the file element and scroll to it
     setTimeout(() => {
       const fileElement = document.getElementById(`file-${fileId}`)
       if (fileElement) {
@@ -121,10 +278,12 @@ export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, use
     }, 100)
   }
 
+  // Toggle fullscreen mode
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
   }
 
+  // Toggle file list collapse
   const toggleFileList = () => {
     setIsFileListCollapsed(!isFileListCollapsed)
   }
@@ -135,7 +294,30 @@ export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, use
         open={isOpen}
         onOpenChange={(open) => !open && onClose()}
       >
-      
+      <DialogTitle>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <Folder className="h-4 w-4 text-white" />
+              </div>
+              <h2 className="text-lg font-medium">Shared Files</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
+                      {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+            </div>
+          </div>
+      </DialogTitle>
+      <DialogDescription></DialogDescription>
         <DialogContent
           className={cn(
             "flex flex-col p-0 gap-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
@@ -143,30 +325,8 @@ export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, use
           )}
         >
           {/* Header */}
-          <DialogTitle>
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                    <Folder className="h-4 w-4 text-white" />
-                  </div>
-                  <h2 className="text-lg font-medium">Shared Files</h2>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-                          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                </div>
-              </div>
-          </DialogTitle>
-          <DialogDescription></DialogDescription>
+          
+
           {/* Content */}
           <div className="flex flex-1 overflow-hidden">
             {/* File list section */}
@@ -191,7 +351,7 @@ export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, use
                       />
                     </div>
                     <div className="flex-shrink-0">
-                      <input type="file" ref={fileInputRef} onChange={handleFileInputChange} className="hidden" multiple />
+                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple />
                       {!isUploading ? <Button
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"

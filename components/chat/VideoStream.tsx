@@ -51,14 +51,6 @@ type ReactionEmoji = {
   label: string;
 };
 
-const reactionEmojis: ReactionEmoji[] = [
-  { icon: Heart, color: "text-pink-500", label: "heart" },
-  { icon: SmilePlus, color: "text-yellow-500", label: "smile" },
-  { icon: ThumbsUp, color: "text-blue-500", label: "thumbs-up" },
-  { icon: Star, color: "text-amber-500", label: "star" },
-  { icon: Fire, color: "text-orange-500", label: "fire" },
-  { icon: Zap, color: "text-purple-500", label: "zap" },
-]
 
 
 export function VideoStream({
@@ -68,9 +60,7 @@ export function VideoStream({
   userId,
   messages,
   isLocal,
-  sendReaction,
   userName,
-  reactions,
   settings,
   userAvatar,
   isMuted: initialMuted,
@@ -84,13 +74,11 @@ export function VideoStream({
   isHandRaised,
 }: VideoStreamProps & {
   className?: string
-  transcription:boolean
+  transcription?:boolean
   appId:string
   messages?: Message[]
   settings?: TranscriptionSettings
   isVisible?: boolean
-  reactions:Set<ReactionMessage>
-  sendReaction:(reactionMessage:ReactionMessage) => Promise<void>
   audioTrack?: any
   isScreen?:boolean,
   onMuteRemoteUser?: () => void
@@ -170,7 +158,6 @@ export function VideoStream({
     }
     setIsVideoOff(!isVideoOff)
 
-    console.log("this reaction", reactions)
   }
 
   const handleToggleMaximize = (e: React.MouseEvent) => {
@@ -615,7 +602,7 @@ export function VideoStream({
               </div>
 
               {/* Reactions panel */}
-              <AnimatePresence>
+              {/* <AnimatePresence>
                 {showReactions && (
                  <VideoReactions
                   currentUserId={getOrCreateUserId()}
@@ -624,7 +611,7 @@ export function VideoStream({
                   sendReaction={sendReaction}
                 />
                 )}
-              </AnimatePresence>
+              </AnimatePresence> */}
 
               {/* Settings panel */}
               <AnimatePresence>
@@ -698,10 +685,10 @@ export function VideoStream({
         </>
       )}
 
-      <ReactionDisplay
+      {/* <ReactionDisplay
         reactionsList={reactions}
         videoContainerRef={videoRef}
-      />
+      /> */}
     </div>
   )
 }

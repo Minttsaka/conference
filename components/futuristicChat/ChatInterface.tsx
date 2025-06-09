@@ -5,39 +5,10 @@ import { nanoid } from "nanoid"
 import MessageList from "./MessageList"
 import MessageInput from "./MessageInput"
 import { SessionPayload } from "@/lib/session"
-
-type User = {
-  id: string
-  name: string
-  email?: string
-  image?: string
-  agoraUid?: number
-}
-
-type Room = {
-  id: string
-  name: string
-  description?: string
-  isPrivate: boolean
-  channelName: string
-}
-
-type Message = {
-  id: string
-  text: string
-  sender: string
-  senderId: string
-  timestamp: Date
-  isCurrentUser: boolean
-  reactions: { emoji: string; userId: string }[]
-  replyTo?: string
-  replyToId?: string
-  replyToSender?: string
-  file?: {
-    name: string
-    url: string
-  }
-}
+import { toast } from "sonner"
+import { publishMessage } from "../demo/agora"
+import { Message } from "@/types/message"
+import { generateObjectId } from "@/lib/object-id"
 
 interface ChatInterfaceProps {
   user: SessionPayload
@@ -48,101 +19,84 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceProps) {
 
   const [messages, setMessages] = useState<Message[]>([])
-  const [rooms, setRooms] = useState<Room[]>([])
-  const [currentRoom, setCurrentRoom] = useState<Room | null>(null)
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
-  const [typingUsers, setTypingUsers] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
-  // Scroll to bottom of messages
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [])
 
-  // Fetch rooms on component mount
+  // Fetch initial messages
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        fetchMessages()
-      } catch (error) {
-        console.error("Error fetching rooms:", error)
-       
-      }finally {
-        setIsLoading(false)
-      }
-    }
+    fetchMessages()
+  }, [channelName])
 
-    fetchRooms()
-  }, [])
-
-  // Join room when socket connects or room changes
+  // Scroll to bottom when messages change
   useEffect(() => {
+    scrollToBottom()
+  }, [messages, scrollToBottom])
 
+  // Set up RTM event listeners
+  useEffect(() => {
     if (!rtm) return
 
-    // Message event handler
     const handleMessage = async (event: any) => {
-      console.log("Message received:", event.publisher, event.message)
-
       try {
         const messageData = JSON.parse(event.message)
-        console.log("Parsed message data:", messageData)
 
         if (messageData.type === "text") {
-          // Instead of fetching all messages again, just update the local state
-          // This provides a more responsive experience
-          const newMsg: Message = {
-            id: messageData.id || `${event.publisher}-${messageData.timestamp}`,
+          const msg: Message = {
+            id: messageData.id || `${event.publisher}-${Date.now()}`,
             text: messageData.text,
-            senderId:user.userId,
-            sender: messageData.sender || event.publisher,
-            timestamp: new Date(messageData.timestamp),
+            senderId: messageData.senderId,
+            sender: messageData.sender,
+            timestamp: new Date(messageData.timestamp || Date.now()),
             isCurrentUser: event.publisher === user.userId,
             reactions: messageData.reactions || [],
             replyTo: messageData.replyTo,
             replyToSender: messageData.replyToSender,
+            replyToId: messageData.replyToId,
             file: messageData.file,
           }
 
           setMessages((prev) => {
             // Check if message already exists to prevent duplicates
-            const messageExists = prev.some((msg) => msg.id === newMsg.id)
-            if (messageExists) return prev
-            return [...prev, newMsg]
+            if (prev.some((m) => m.id === msg.id)) {
+              return prev
+            }
+            return [...prev, msg]
           })
+        } else if (messageData.type === "reaction" && messageData.messageId) {
+          setMessages((prev) =>
+            prev.map((msg) => {
+              if (msg.id === messageData.messageId) {
+                const reaction = messageData.reaction
 
-          // Optionally refresh from server to ensure consistency
-          setTimeout(() => fetchMessages(), 1000)
-        } else if (messageData.type === "reaction" && messageData.data) {
-    
-            setMessages((prev) =>
-              prev.map((msg) => {
-                if (msg.id === messageData.id) {
-                  // Check if reaction already exists
-                  const existingReaction = msg.reactions.find(
-                    (r) => r.userId === messageData.reaction.userId && r.emoji === messageData.reaction.emoji,
-                  )
-      
-                  if (existingReaction) {
-                    // Remove reaction
-                    return {
-                      ...msg,
-                      reactions: msg.reactions.filter((r) => !(r.userId === messageData.reaction.userId && r.emoji === messageData.reaction.emoji)),
-                    }
-                  } else {
-                    // Add reaction
-                    return {
-                      ...msg,
-                      reactions: [...msg.reactions, messageData.reaction],
-                    }
+                // Check if reaction already exists
+                const existingReactionIndex = msg.reactions.findIndex(
+                  (r) => r.userId === reaction.userId && r.emoji === reaction.emoji,
+                )
+
+                if (existingReactionIndex >= 0) {
+                  // Remove reaction
+                  return {
+                    ...msg,
+                    reactions: msg.reactions.filter((_, i) => i !== existingReactionIndex),
+                  }
+                } else {
+                  // Add reaction
+                  return {
+                    ...msg,
+                    reactions: [...msg.reactions, reaction],
                   }
                 }
-                return msg
-              }),
-            )
-      
+              }
+              return msg
+            }),
+          )
+        } else if (messageData.type === "typing") {
+          // Handle typing indicator if needed
         }
       } catch (error) {
         console.error("Error parsing message:", error)
@@ -175,14 +129,18 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
         rtm.removeEventListener("presence", handlePresence)
         rtm.removeEventListener("status", handleStatus)
       }
+
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
     }
- 
-  }, [rtm ,user, scrollToBottom])
+  }, [rtm, channelName, user.userId])
 
   // Fetch message history
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/message/${channelName}`)
+      const response = await fetch(`/api/message`)
       const data = await response.json()
 
       if (response.ok) {
@@ -194,6 +152,7 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
           timestamp: new Date(msg.createdAt),
           replyTo: msg.replyTo?.text,
           replyToSender: msg.replyTo?.user.name,
+          replyToId: msg.replyToId,
         }))
 
         setMessages(formattedMessages)
@@ -201,60 +160,86 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
       }
     } catch (error) {
       console.error("Error fetching messages:", error)
-     
+      toast.error("Failed to load messages")
+    }
+  }
+
+  // Publish message to RTM
+  const publishRTMMessage = async (type: string, data: any) => {
+    if (!rtm) return false
+
+    try {
+      const messagePayload = JSON.stringify({
+        type,
+        ...data,
+      })
+
+      await rtm.publish(channelName, messagePayload)
+      return true
+    } catch (error) {
+      console.error("Error publishing to RTM:", error)
+      return false
     }
   }
 
   // Send a message
   const sendMessage = async (text: string, file?: { name: string; url: string }) => {
-    // if (!socket || !isConnected || !currentRoom) {
-    //   toast({
-    //     title: "Not connected",
-    //     description: "You are not connected to the chat server",
-    //     variant: "destructive",
-    //   })
-    //   return
-    // }
+    if (!rtm) {
+      toast.error("You are not connected to the chat server")
+      return
+    }
+
+    if (!text.trim() && !file) {
+      return
+    }
 
     try {
-      const messageId = nanoid()
+      const messageId = generateObjectId()
       const timestamp = new Date()
 
-      const message: Message = {
+      const messageData : Message = {
         id: messageId,
+        isCurrentUser:true,
         text,
         sender: user.name,
         senderId: user.userId,
-        timestamp,
-        isCurrentUser: true,
+        timestamp: timestamp,
         reactions: [],
         file,
       }
 
       // Add reply data if replying to a message
       if (replyingTo) {
-        message.replyTo = replyingTo.text
-        message.replyToId = replyingTo.id
-        message.replyToSender = replyingTo.sender
+        messageData.replyTo = replyingTo.text
+        messageData.replyToId = replyingTo.id
+        messageData.replyToSender = replyingTo.sender
       }
 
-      // Add to local messages immediately for UI responsiveness
-      setMessages((prev) => [...prev, message])
+      // Publish to RTM
+      const published = await publishMessage(rtm, channelName, messageData)
+
+      if (published) {
+        // Optimistically add message to local state
+        const newMessage: Message = {
+          ...messageData,
+          timestamp,
+          isCurrentUser: true,
+        }
+
+        setMessages((prev) => [...prev, newMessage])
+      }
 
       // Clear reply state
       setReplyingTo(null)
 
-      // Emit to socket
-      //socket.emit("send-message", currentRoom.id, message)
-
       // Save to database
-      await fetch("/api/messages", {
+      await fetch("/api/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          roomId: currentRoom?.id,
+          roomId: channelName,
           text,
           replyToId: replyingTo?.id,
           fileUrl: file?.url,
@@ -265,13 +250,16 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
       scrollToBottom()
     } catch (error) {
       console.error("Error sending message:", error)
-      
+      toast.error("Failed to send message")
     }
   }
 
   // Add reaction to a message
   const addReaction = async (messageId: string, emoji: string) => {
-   // if (!socket || !isConnected || !currentRoom) return
+    if (!rtm) {
+      toast.error("You are not connected to the chat server")
+      return
+    }
 
     try {
       const reaction = {
@@ -280,8 +268,36 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
         userName: user.name,
       }
 
-      // Emit to socket
-      //socket.emit("add-reaction", currentRoom.id, messageId, reaction)
+      // Publish reaction to RTM
+      await publishRTMMessage("reaction", {
+        messageId,
+        reaction,
+      })
+
+      // Optimistically update UI
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === messageId) {
+            // Check if reaction already exists
+            const existingReaction = msg.reactions.find((r) => r.userId === user.userId && r.emoji === emoji)
+
+            if (existingReaction) {
+              // Remove reaction
+              return {
+                ...msg,
+                reactions: msg.reactions.filter((r) => !(r.userId === user.userId && r.emoji === emoji)),
+              }
+            } else {
+              // Add reaction
+              return {
+                ...msg,
+                reactions: [...msg.reactions, reaction],
+              }
+            }
+          }
+          return msg
+        }),
+      )
 
       // Save to database
       await fetch("/api/reactions", {
@@ -296,14 +312,18 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
       })
     } catch (error) {
       console.error("Error adding reaction:", error)
+      toast.error("Failed to add reaction")
     }
   }
 
   // Handle typing indicator
   const handleTyping = () => {
-    //if (!socket || !isConnected || !currentRoom) return
+    if (!rtm) return
 
-   // socket.emit("typing", currentRoom.id, user.userId)
+    publishRTMMessage("typing", {
+      userId: user.userId,
+      userName: user.name,
+    })
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
@@ -312,10 +332,11 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
 
     // Set new timeout
     typingTimeoutRef.current = setTimeout(() => {
-      //socket.emit("stop-typing", currentRoom.id, user.userId)
+      publishRTMMessage("stopTyping", {
+        userId: user.userId,
+      })
     }, 2000)
   }
-
 
   return (
     <div className="flex flex-col h-screen bg-black">

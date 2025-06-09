@@ -1,7 +1,5 @@
 "use client"
 import { ScreenShare } from "lucide-react"
-import { useCallback } from "react"
-import { Users, ChevronUp, ChevronDown } from "lucide-react"
 import { useMediaQuery } from "@/hook/useMediaQuery"
 import { useOverflow } from "@/hook/useOverflow"
 import { VideoStream } from "./VideoStream"
@@ -14,8 +12,6 @@ interface SharedScreensSectionProps {
     remoteUsers: IAgoraRTCRemoteUser[]
     maximizedParticipant: string | null
     raisedHands: Set<string>
-    reactions: Set<ReactionMessage>
-    sendReaction:(reactionMessage:ReactionMessage) => Promise<void>
     userId: string
     handleToggleMaximize: (userId: string) => void
     handleMuteRemoteUser: (userId: string) => void
@@ -30,8 +26,6 @@ export function SharedScreensSection({
   remoteUsers,
   maximizedParticipant,
   raisedHands,
-  reactions,
-  sendReaction,
   userId,
   handleToggleMaximize,
   handleMuteRemoteUser,
@@ -39,7 +33,7 @@ export function SharedScreensSection({
   const isXlScreen = useMediaQuery("(min-width: 1280px)")
 
   // Use our custom overflow hook
-  const { ref, isOverflowing, checkOverflow } = useOverflow<HTMLDivElement>({
+  const { ref} = useOverflow<HTMLDivElement>({
     horizontal: !isXlScreen,
     vertical: isXlScreen,
   })
@@ -95,8 +89,6 @@ export function SharedScreensSection({
                     userId={remoteUser.uid.toString()}
                     maximisedUser={maximizedParticipant}
                     isLocal={false}
-                    reactions={reactions}
-                    sendReaction={sendReaction}
                     appId={process.env.NEXT_PUBLIC_AGORA_APP_ID!}
                     isHandRaised={raisedHands.has(userId)}
                     isVideoOff={false}

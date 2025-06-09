@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { getOrCreateUserId } from "@/lib/userGn"
-import { toast } from "react-hot-toast"
+import { getMeeting } from "@/lib/api"
+import { toast } from "sonner"
 
 export default function JoinMeetingWithId() {
-  const router = useRouter()
-  const [displayName, setDisplayName] = useState("")
+
   const [meetingId, setMeetingId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isGlitching, setIsGlitching] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
   useEffect(() => {
     const glitchInterval = setInterval(() => {
@@ -22,50 +22,43 @@ export default function JoinMeetingWithId() {
     return () => clearInterval(glitchInterval)
   }, [])
 
-  const generateToken = async () => {
-    try {
-      const response = await fetch("/api/video-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channelName: meetingId, uid: getOrCreateUserId(), userRole: "participant" }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        const token = encodeURIComponent(data.token)
-        const url = `/demo/${meetingId}?token=${token}`
-        return url
-      } else {
-        throw new Error(data.error)
-      }
-    } catch (error) {
-      console.error("Error generating token:", error)
-    }
-  }
-
-  const handleJoin = async (e: React.FormEvent) => {
+   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setHasError(false)
 
-    if (!displayName.trim() || !meetingId.trim()) {
-      toast.error("Please enter your name and the meeting ID")
+    // Check for empty input first
+    if (!meetingId.trim()) {
+      toast("Please enter a meeting ID")
       setIsLoading(false)
+      setHasError(true)
       return
     }
 
     try {
-      const link = await generateToken()
-      localStorage.setItem("fusionUserName", displayName.trim())
-      toast.success("Joining meeting...")
-      link ? window.location.href = link : router.push("/start")
+      const meeting = await getMeeting(meetingId)
+      setHasSubmitted(true)
+
+      console.log("meeting", meeting)
+
+      if (!meeting.meeting) {
+        setHasError(true)
+        toast("Invalid meeting ID")
+        setIsLoading(false)
+        return
+      } else {
+        // Success case
+        const link = `/join/${meetingId}`
+        toast.success("Joining meeting...")
+        window.location.href = link
+      }
+
     } catch (error) {
-      toast.error("Failed to join meeting")
-    } finally {
+      setHasError(true)
+      toast("Failed to join meeting")
       setIsLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -78,7 +71,6 @@ export default function JoinMeetingWithId() {
           Join a Meeting
         </motion.h1>
         <form onSubmit={handleJoin} className="space-y-6">
-          <InputField value={displayName} onChange={setDisplayName} placeholder="Your name" />
           <InputField value={meetingId} onChange={setMeetingId} placeholder="Meeting ID" />
           <motion.button
             type="submit"
@@ -90,6 +82,26 @@ export default function JoinMeetingWithId() {
             {isLoading ? "Joining..." : "Join Meeting"}
           </motion.button>
         </form>
+        {hasSubmitted &&
+        (hasError ? (
+          <motion.p
+            className="mt-8 text-[10px] text-center text-red-400 max-w-[300px] mx-auto leading-loose"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+          >
+            Invalid meeting ID or connection failed!
+          </motion.p>
+        ) : (
+          <motion.p
+            className="mt-8 text-[10px] text-center text-green-400 max-w-[300px] mx-auto leading-loose"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+          >
+            Success! Redirecting to meeting...
+          </motion.p>
+        ))}
         <motion.p
           className="mt-8 text-[10px] text-center text-gray-400 max-w-[300px] mx-auto leading-loose"
           initial={{ opacity: 0 }}

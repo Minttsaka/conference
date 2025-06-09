@@ -5,7 +5,6 @@ import { Users, ChevronUp, ChevronDown } from "lucide-react"
 import { useMediaQuery } from "@/hook/useMediaQuery"
 import { useOverflow } from "@/hook/useOverflow"
 import { VideoStream } from "./VideoStream"
-import { ReactionMessage } from "@/lib/initAgoraClient"
 import { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng"
 
 
@@ -13,8 +12,6 @@ interface ParticipantsSectionProps {
   remoteUsers: IAgoraRTCRemoteUser[]
   maximizedParticipant: string | null
   raisedHands: Set<string>
-  reactions: Set<ReactionMessage>
-  sendReaction:(reactionMessage:ReactionMessage) => Promise<void>
   userId: string
   handleToggleMaximize: (userId: string) => void
   handleMuteRemoteUser: (userId: string) => void
@@ -29,8 +26,6 @@ export function ParticipantsSection({
   remoteUsers,
   maximizedParticipant,
   raisedHands,
-  reactions,
-  sendReaction,
   userId,
   handleToggleMaximize,
   handleMuteRemoteUser,
@@ -103,8 +98,6 @@ export function ParticipantsSection({
                     appId={process.env.NEXT_PUBLIC_AGORA_APP_ID!}
                     maximisedUser={maximizedParticipant}
                     isLocal={false}
-                    reactions={reactions}
-                    sendReaction={sendReaction}
                     isVideoOff={false}
                     isHandRaised={raisedHands.has(remoteUser.uid.toString())}
                     userName={userName}

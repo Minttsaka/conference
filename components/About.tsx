@@ -35,13 +35,13 @@ const timelineData: TimelineItem[] = [
   },
   {
     year: '2024',
-    title: 'Founding Dctfusion tech startup',
-    description: 'Founded dctfusion , leading Edtech startup, changing experience of education.',
+    title: 'Founding extreme region tech startup',
+    description: 'Founded extreme region , leading Edtech startup, changing experience of education.',
   },
   {
     year: '2024,',
     title: 'Attachment',
-    description: 'Did my attachment at matapwata secondary school , opening opportunity for students and instructors to use technology that dctfusion is offering to the world.',
+    description: 'Did my attachment at matapwata secondary school , opening opportunity for students and instructors to use technology that extreme region is offering to the world.',
   },
 ]
 
@@ -128,7 +128,7 @@ const AboutMe: React.FC = () => {
               When I am not coding, you can find me exploring the latest tech trends, contributing to open-source projects, or sharing my knowledge through tech blogs and community meetups. I am always eager to take on new challenges and collaborate on innovative projects that push the boundaries of what is possible in tech.
             </p>
             <p className="mb-4">
-              In 2024 , i founded dctfusion, edtech startup, changing how education is being conducted in the world. <Link className='underline' target='__blank' href={'https://dctfusion.tech'}>Click this link to explore.</Link>
+              In 2024 , i founded extreme region, edtech startup, changing how education is being conducted in the world. <Link className='underline' target='__blank' href={'https://extreme region.tech'}>Click this link to explore.</Link>
             </p>
             <p>
               Lets connect and create something amazing together!

@@ -20,17 +20,14 @@ import {
     ThumbsUp,
     Laugh,
     Frown,
-    Mic,
     X,
     Shield,
     Wand2,
-    Zap,
-
+ 
 } from "lucide-react"
 import data from "@emoji-mart/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { useAgoraChat } from "@/hook/useAgoraChat"
 import { getOrCreateUserId } from "@/lib/userGn"
 import crypto from "crypto";
 import { ChatMessage } from "@/lib/initAgoraClient"

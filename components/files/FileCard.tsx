@@ -22,7 +22,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { FileItem } from "@/types/clasroom"
+import { FileItem } from "@/types/file"
 
 interface FileCardProps {
   file: FileItem
