@@ -6,7 +6,7 @@ import AgoraRTM from "agora-rtm-sdk"
 const { RTM } = AgoraRTM
 
 // Replace with your actual Agora App ID
-const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || ""
+const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID! || ""
 
 
 

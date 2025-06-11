@@ -3,7 +3,6 @@ import { ScreenShare } from "lucide-react"
 import { useMediaQuery } from "@/hook/useMediaQuery"
 import { useOverflow } from "@/hook/useOverflow"
 import { VideoStream } from "./VideoStream"
-import { ReactionMessage } from "@/lib/initAgoraClient"
 import { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng"
 
 

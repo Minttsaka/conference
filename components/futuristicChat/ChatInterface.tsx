@@ -1,12 +1,11 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from "react"
-import { nanoid } from "nanoid"
 import MessageList from "./MessageList"
 import MessageInput from "./MessageInput"
 import { SessionPayload } from "@/lib/session"
 import { toast } from "sonner"
-import { publishMessage } from "../demo/agora"
+import { publishMessage } from "../../lib/agora"
 import { Message } from "@/types/message"
 import { generateObjectId } from "@/lib/object-id"
 
@@ -27,17 +26,14 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [])
 
-  // Fetch initial messages
   useEffect(() => {
     fetchMessages()
   }, [channelName])
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  // Set up RTM event listeners
   useEffect(() => {
     if (!rtm) return
 
@@ -51,6 +47,7 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
             text: messageData.text,
             senderId: messageData.senderId,
             sender: messageData.sender,
+            channelName,
             timestamp: new Date(messageData.timestamp || Date.now()),
             isCurrentUser: event.publisher === user.userId,
             reactions: messageData.reactions || [],
@@ -137,50 +134,62 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
     }
   }, [rtm, channelName, user.userId])
 
-  // Fetch message history
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`/api/message`)
-      const data = await response.json()
 
-      if (response.ok) {
-        const formattedMessages = data.messages.map((msg: any) => ({
-          ...msg,
-          isCurrentUser: msg.userId === user.userId,
-          sender: msg.user.name,
-          senderId: msg.userId,
-          timestamp: new Date(msg.createdAt),
-          replyTo: msg.replyTo?.text,
-          replyToSender: msg.replyTo?.user.name,
-          replyToId: msg.replyToId,
-        }))
+const fetchMessages = async () => {
+  
+  try {
+    const response = await fetch(`/api/message/${channelName}`)
+    const data = await response.json()
 
-        setMessages(formattedMessages)
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch messages')
+    }
+
+    console.log("the messages", data.messages)
+    const formattedMessages: Message[] = data.messages.map((msg: any) => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.sender,
+        senderId: msg.senderId,
+        timestamp: new Date(msg.timestamp),
+        isCurrentUser: msg.isCurrentUser,
+        reactions: msg.reactions || [],
+        replyTo: msg.replyTo,
+        replyToId: msg.replyToId,
+        replyToSender: msg.replyToSender,
+        file: msg.file,
+      }))
+
+      setMessages(formattedMessages)
+
+    if (data.success && data.messages) {
+      // Transform timestamps and ensure proper typing
+      // const formattedMessages: Message[] = data.messages.map((msg: any) => ({
+      //   id: msg.id,
+      //   text: msg.text,
+      //   sender: msg.sender,
+      //   senderId: msg.senderId,
+      //   timestamp: new Date(msg.timestamp),
+      //   isCurrentUser: msg.isCurrentUser,
+      //   reactions: msg.reactions || [],
+      //   replyTo: msg.replyTo,
+      //   replyToId: msg.replyToId,
+      //   replyToSender: msg.replyToSender,
+      //   file: msg.file,
+      // }))
+
+      
+      
+      // Scroll to bottom after messages are loaded
+      setTimeout(() => {
         scrollToBottom()
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error)
-      toast.error("Failed to load messages")
+      }, 100)
     }
-  }
-
-  // Publish message to RTM
-  const publishRTMMessage = async (type: string, data: any) => {
-    if (!rtm) return false
-
-    try {
-      const messagePayload = JSON.stringify({
-        type,
-        ...data,
-      })
-
-      await rtm.publish(channelName, messagePayload)
-      return true
-    } catch (error) {
-      console.error("Error publishing to RTM:", error)
-      return false
-    }
-  }
+  } catch (error) {
+    console.error("Error fetching messages:", error)
+    toast.error("Failed to load messages")
+  } 
+}
 
   // Send a message
   const sendMessage = async (text: string, file?: { name: string; url: string }) => {
@@ -204,6 +213,7 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
         sender: user.name,
         senderId: user.userId,
         timestamp: timestamp,
+        channelName,
         reactions: [],
         file,
       }
@@ -238,13 +248,7 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          roomId: channelName,
-          text,
-          replyToId: replyingTo?.id,
-          fileUrl: file?.url,
-          fileName: file?.name,
-        }),
+        body: JSON.stringify(messageData),
       })
 
       scrollToBottom()
@@ -269,10 +273,7 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
       }
 
       // Publish reaction to RTM
-      await publishRTMMessage("reaction", {
-        messageId,
-        reaction,
-      })
+     
 
       // Optimistically update UI
       setMessages((prev) =>
@@ -320,10 +321,10 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
   const handleTyping = () => {
     if (!rtm) return
 
-    publishRTMMessage("typing", {
-      userId: user.userId,
-      userName: user.name,
-    })
+    // publishRTMMessage("typing", {
+    //   userId: user.userId,
+    //   userName: user.name,
+    // })
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
@@ -332,35 +333,31 @@ export default function ChatInterface({ user, rtm, channelName }: ChatInterfaceP
 
     // Set new timeout
     typingTimeoutRef.current = setTimeout(() => {
-      publishRTMMessage("stopTyping", {
-        userId: user.userId,
-      })
+      // publishRTMMessage("stopTyping", {
+      //   userId: user.userId,
+      // })
     }, 2000)
   }
 
   return (
-    <div className="flex flex-col h-screen bg-black">
-      {/* Background grid effect */}
-      <div className="fixed inset-0 z-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-900 scrollbar-track-transparent p-4">
-            <MessageList
-              messages={messages}
-              setReplyingTo={setReplyingTo}
-              addReaction={addReaction}
-              currentUserId={user.userId}
-            />
-            <div ref={messagesEndRef} />
-          </div>
+    <div className="flex flex-col max-h-full">
+      <div className="flex-1 scrollbar-thin scrollbar-thumb-cyan-900 scrollbar-track-transparent p-4">
+        <MessageList
+          messages={messages}
+          setReplyingTo={setReplyingTo}
+          addReaction={addReaction}
+          currentUserId={user.userId}
+        />
+        <div ref={messagesEndRef} />
+      </div>
 
-          <MessageInput
-            onSendMessage={sendMessage}
-            onTyping={handleTyping}
-            replyingTo={replyingTo}
-            setReplyingTo={setReplyingTo}
-          />
-        </div>
+      <div className="relative">
+        <MessageInput
+          onSendMessage={sendMessage}
+          onTyping={handleTyping}
+          replyingTo={replyingTo}
+          setReplyingTo={setReplyingTo}
+        />
       </div>
     </div>
   )

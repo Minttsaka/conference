@@ -32,8 +32,12 @@ export async function decrypt(session: string | undefined = "") {
       algorithms: ["HS256"], // Make sure this matches the algorithm in the main app
     })
 
-    console.log("Session decrypted successfully:", payload)
-    return payload as SessionPayload
+    if (isSessionPayload(payload)) {
+      return payload;
+    } else {
+      console.error("Invalid session payload structure");
+      return null;
+    }
   } catch (error) {
     // More detailed error logging
     if (error instanceof Error) {
@@ -47,6 +51,17 @@ export async function decrypt(session: string | undefined = "") {
     }
     return null
   }
+}
+
+function isSessionPayload(payload: unknown): payload is SessionPayload {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof (payload as any).userId === "string" &&
+    typeof (payload as any).name === "string" &&
+    typeof (payload as any).email === "string" &&
+    typeof (payload as any).expiresAt === "number"
+  );
 }
 
 // Function to get the current session

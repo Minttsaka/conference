@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { generateObjectId } from "@/lib/object-id"
 import type { FileItem, UploadingFile, FileNotification } from "@/types/file"
 import { uploadFileTos3 } from "@/lib/aws"
-import { publishMessage } from "@/components/demo/agora"
+import { publishMessage } from "@/lib/agora"
 import { getFiles } from "@/lib/api"
 
 interface UseFileManagerProps {

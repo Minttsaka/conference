@@ -3,10 +3,9 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { File, FileText, FileImage, FileVideo, FileAudio, X, Eye } from "lucide-react"
-import type { SharedFile } from "./FilesDialog"
 
 interface NewFileNotificationProps {
-  file: SharedFile
+  file: any
   onView: () => void
   onClose: () => void
 }

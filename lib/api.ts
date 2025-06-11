@@ -5,9 +5,11 @@ export async function getMeeting(meetingId: string) {
   try {
 
     const response = await fetch(`http://localhost:3000/api/get-meeting/${meetingId}`)
+    
 
     if (!response.ok) {
       if (response.status === 401) {
+       
         return { error: "unauthorized" }
       }
       if (response.status === 404) {
@@ -17,6 +19,8 @@ export async function getMeeting(meetingId: string) {
     }
 
     const data = await response.json()
+
+     console.log("meeting",data)
     return { meeting: data }
   } catch (error) {
     console.error("Error fetching meeting:", error)

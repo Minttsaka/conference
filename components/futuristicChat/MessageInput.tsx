@@ -18,8 +18,6 @@ type MessageInputProps = {
 export default function MessageInput({ onSendMessage, onTyping, replyingTo, setReplyingTo }: MessageInputProps) {
   const [message, setMessage] = useState("")
   const [file, setFile] = useState<{ name: string; url: string } | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle message submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,59 +30,17 @@ export default function MessageInput({ onSendMessage, onTyping, replyingTo, setR
     setFile(null)
   }
 
-  // Handle file upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
-    // Check file size (5MB limit)
-    if (selectedFile.size > 5 * 1024 * 1024) {
-   
-      return
-    }
-
-    try {
-      setIsUploading(true)
-
-      const formData = new FormData()
-      formData.append("file", selectedFile)
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error("Upload failed")
-      }
-
-      const data = await response.json()
-
-      setFile({
-        name: data.name,
-        url: data.url,
-      })
-
-  
-    } catch (error) {
-      console.error("Error uploading file:", error)
-
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
   // Trigger typing indicator
   const handleTyping = () => {
     onTyping()
   }
 
   return (
-    <div className="p-4 border-t border-cyan-900/30 bg-black/60">
+    <div className="p-1 shadow border-t border-cyan-900/30bg-black/60">
       {/* Reply indicator */}
       {replyingTo && (
         <div
-          className="mb-2 flex items-center justify-between p-2 bg-cyan-900/20 border border-cyan-900/30"
+          className="absolute -top-20 inset-x-0 mb-2 flex items-center justify-between p-2 bg-cyan-900/20 border border-cyan-900/30"
           style={{
             clipPath: "polygon(0 0, 100% 0, 98% 100%, 0 100%)",
           }}
@@ -112,7 +68,7 @@ export default function MessageInput({ onSendMessage, onTyping, replyingTo, setR
       {/* File attachment preview */}
       {file && (
         <div
-          className="mb-2 flex items-center justify-between p-2 bg-cyan-900/20 border border-cyan-900/30"
+          className="mb-2 flex items-center justify-between p-2  dark:bg-cyan-900/20 border dark:border-cyan-900/30"
           style={{
             clipPath: "polygon(0 0, 100% 0, 98% 100%, 0 100%)",
           }}
@@ -132,28 +88,6 @@ export default function MessageInput({ onSendMessage, onTyping, replyingTo, setR
       )}
 
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          className="hidden"
-          accept="image/*,.pdf,.doc,.docx,.txt"
-        />
-
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 rounded-none bg-black/50 border border-cyan-900/30 hover:bg-cyan-900/20"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          style={{
-            clipPath: "polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%)",
-          }}
-        >
-          <Paperclip className="h-4 w-4 text-cyan-400" />
-        </Button>
-
         <div className="relative flex-1">
           <textarea
             value={message}
@@ -186,7 +120,7 @@ export default function MessageInput({ onSendMessage, onTyping, replyingTo, setR
           type="submit"
           size="icon"
           className="h-10 w-10 rounded-none bg-cyan-900/30 hover:bg-cyan-800/50 border border-cyan-900/50"
-          disabled={(!message.trim() && !file) || isUploading}
+          disabled={(!message.trim() && !file)}
           style={{
             clipPath: "polygon(0 0, 100% 0, 100% 100%, 30% 100%, 0 70%)",
           }}

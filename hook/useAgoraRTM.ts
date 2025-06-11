@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import {  ReactionMessage } from "@/lib/initAgoraClient"
 import {  SessionPayload } from "@/lib/session"
-import { initializeAgoraRTM, publishMessage } from "@/components/demo/agora"
+import { initializeAgoraRTM, publishMessage } from "@/lib/agora"
 
 interface UseAgoraRTMProps {
   channel: string
@@ -25,7 +25,7 @@ export function useAgoraRTM({  user, channel }: UseAgoraRTMProps) {
   const setupRTM = async () => {
     try {
       setIsLoading(true)
-      const { rtm } = await initializeAgoraRTM(user, `${channel}controls`)
+      const { rtm } = await initializeAgoraRTM( user, `${channel}controls`)
       setRtm(rtm)
     
     } catch (error) {
@@ -73,7 +73,11 @@ useEffect(() => {
 
   const handleChannelMessage = useCallback(async(message: any) => {
 
+    console.log("respon",message)
+
     const messageData = JSON.parse(message.text)
+
+    
 
     if ( messageData.type === "raised") {
 
@@ -121,7 +125,7 @@ useEffect(() => {
 
   const toggleHand = useCallback(
     async (userId: string) => {
-      if (!rtmChannelRef.current) {
+      if (!rtm) {
         toast.error("Chat service not connected")
         return
       }
@@ -129,10 +133,10 @@ useEffect(() => {
       try {
         const newHandState = !isHandRaised
   
-        const message = JSON.stringify({
+        const message = {
           type: newHandState ? "raised" : "lowered",
           userId
-        })
+        }
   
         await publishMessage(rtm, `${channel}controls`, message)
      

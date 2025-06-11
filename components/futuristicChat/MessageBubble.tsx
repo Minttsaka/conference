@@ -7,23 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { formatTime, getInitials } from "@/lib/utils"
 import Picker from "emoji-picker-react"
-
-type Message = {
-  id: string
-  text: string
-  sender: string
-  senderId: string
-  timestamp: Date
-  isCurrentUser: boolean
-  reactions: { emoji: string; userId: string }[]
-  replyTo?: string
-  replyToId?: string
-  replyToSender?: string
-  file?: {
-    name: string
-    url: string
-  }
-}
+import { Message } from "@/types/message"
 
 type MessageProps = {
   message: Message
@@ -231,7 +215,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
                     className="w-auto p-0 border-cyan-900 bg-black/90 backdrop-blur-xl shadow-xl"
                     side="left"
                   >
-                    <Picker onEmojiSelect={(emoji: any) => addReaction(message.id, emoji.native)} />
+                    {/* <Picker onEmojiSelect={(emoji: any) => addReaction(message.id, emoji.native)} /> */}
                   </PopoverContent>
                 </Popover>
               </div>

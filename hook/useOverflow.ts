@@ -3,49 +3,26 @@
 import { useState, useEffect, useRef, type RefObject } from "react"
 
 interface UseOverflowOptions {
-  /**
-   * Whether to check for horizontal overflow
-   */
   horizontal?: boolean
-  /**
-   * Whether to check for vertical overflow
-   */
   vertical?: boolean
-  /**
-   * Whether to recheck on window resize
-   */
   checkOnResize?: boolean
 }
 
-interface UseOverflowResult {
-  /**
-   * Reference to attach to the element
-   */
-  ref: RefObject<HTMLElement>
-  /**
-   * Whether the element is overflowing
-   */
+interface UseOverflowResult<T extends HTMLElement> {
+  ref: React.RefObject<T>
   isOverflowing: boolean
-  /**
-   * Whether the element is overflowing horizontally
-   */
   isOverflowingHorizontally: boolean
-  /**
-   * Whether the element is overflowing vertically
-   */
   isOverflowingVertically: boolean
-  /**
-   * Force a recheck of overflow status
-   */
   checkOverflow: () => void
 }
 
 /**
  * Custom hook to detect if an element's content is overflowing
  */
+
 export function useOverflow<T extends HTMLElement = HTMLDivElement>(
   options: UseOverflowOptions = {},
-): UseOverflowResult {
+): UseOverflowResult<T> {
   const { horizontal = true, vertical = true, checkOnResize = true } = options
 
   const ref = useRef<T>(null)

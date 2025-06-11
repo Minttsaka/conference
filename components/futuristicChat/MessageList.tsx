@@ -1,21 +1,5 @@
+import { Message } from "@/types/message"
 import MessageBubble from "./MessageBubble"
-
-type Message = {
-  id: string
-  text: string
-  sender: string
-  senderId: string
-  timestamp: Date
-  isCurrentUser: boolean
-  reactions: { emoji: string; userId: string }[]
-  replyTo?: string
-  replyToId?: string
-  replyToSender?: string
-  file?: {
-    name: string
-    url: string
-  }
-}
 
 type MessageListProps = {
   messages: Message[]

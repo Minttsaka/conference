@@ -33,7 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { FileItem } from "@/types/clasroom"
 import { uploadFileTos3 } from "@/lib/aws"
 import { getFiles } from "@/lib/api"
-import { publishMessage } from "../demo/agora"
+import { publishMessage } from "../../lib/agora"
 import { SessionPayload } from "@/lib/session"
 
 interface FilesDialogProps {

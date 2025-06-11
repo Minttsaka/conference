@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { initializeAgoraRTM } from "./agora"
+import { initializeAgoraRTM } from "../../lib/agora"
 import { VideoRoomProps } from "@/types/video"
 import ChatInterface from "../futuristicChat/ChatInterface"
 
 export default function ChatPage({ user, meetingId }: VideoRoomProps) {
   const [rtm, setRtm] = useState<any>(null)
-  const [channelName, setChannelName] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -15,10 +14,9 @@ export default function ChatPage({ user, meetingId }: VideoRoomProps) {
       try {
         setIsLoading(true)
 
-        const { rtm, channelName } = await initializeAgoraRTM(user, meetingId)
+        const { rtm } = await initializeAgoraRTM(user, `${meetingId}chat`)
 
         setRtm(rtm)
-        setChannelName(channelName)
       } catch (error) {
         console.error("Failed to initialize Agora RTM:", error)
       } finally {
@@ -42,11 +40,11 @@ export default function ChatPage({ user, meetingId }: VideoRoomProps) {
   }
 
   return (
-    <div className=" bg-gray-950">
-      {rtm && channelName ? (
-        <ChatInterface user={user} rtm={rtm} channelName={channelName} />
+    <div className="bg-gray-950">
+      {meetingId ? (
+        <ChatInterface user={user} rtm={rtm} channelName={`${meetingId}chat`} />
       ) : (
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="text-white text-center">
             <p className="text-lg">Failed to connect to chat. Please try again.</p>
           </div>

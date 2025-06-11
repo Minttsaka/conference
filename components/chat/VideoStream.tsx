@@ -42,7 +42,6 @@ import { VideoReactions } from "./VideoReactions"
 import { getOrCreateUserId } from "@/lib/userGn"
 import { ReactionMessage } from "@/lib/initAgoraClient"
 import { ReactionDisplay } from "./ReactionsComponent"
-import SingleChat from "./SingleChat"
 import { VideoTranscriptionOverlay } from "../transcribe/TranscriptionView"
 
 type ReactionEmoji = {
@@ -384,14 +383,14 @@ export function VideoStream({
 
       {/* Premium Chat Overlay */}
 
-        {showChat && !isLocal && !isScreen && (
+        {/* {showChat && !isLocal && !isScreen && (
         <SingleChat 
           isOpen={showChat}
           onClose={toggleChat}    
           recipientId={userId}
           recipientName={userName as string}
           recipientAvatar={userAvatar}/>
-        )}
+        )} */}
       {/* Professional controls overlay */}
       <AnimatePresence>
         {(showControls || isHovered) && !isLocal && (

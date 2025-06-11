@@ -119,7 +119,7 @@ export default function Lesson({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {lesson.finalSlide.map((slide, index) => (
+                    {lesson.finalSlide.map((slide:any, index:any) => (
                       <Card
                         key={slide.id}
                         className={`cursor-pointer transition-all hover:shadow-md ${
@@ -149,7 +149,7 @@ export default function Lesson({
             <Card className="mt-6 shadow">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 overflow-x-auto">
-                  {lesson.finalSlide.map((slide, index) => (
+                  {lesson.finalSlide.map((slide:any, index:any) => (
                     <Button
                       key={slide.id}
                       variant={index === currentSlideIndex ? "default" : "outline"}
@@ -216,7 +216,7 @@ export default function Lesson({
                     </div>
                     <h2 className="md:text-5xl font-bold mb-6 leading-tight">{currentSlide.title}</h2>
                     <div className="text-lg md:text-xl lg:text-justify opacity-90 space-y-4 prose prose-lg [&_table]:table [&_table]:border-collapse [&_table]:border [&_th]:border [&_td]:border [&_th]:px-4 [&_th]:py-2 [&_td]:px-4 [&_td]:py-2 border-gray-300">
-                      {currentSlide.notes.map((note) => (
+                      {currentSlide.notes.map((note:any) => (
                         <div key={note.id}>
                           <div >
                             <SlideContent content={note.content} type="html" />

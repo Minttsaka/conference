@@ -11,7 +11,7 @@ import { useTheme } from "next-themes"
 import { TranscriptionDialog } from "./TranscriptionDialog"
 import { FilesDialog } from "../files/FilesDialog"
 import { SessionPayload } from "@/lib/session"
-import { initializeAgoraRTM } from "../demo/agora"
+import { initializeAgoraRTM } from "../../lib/agora"
 import Logo from "../Logo"
 
 interface DimensionalSidebarProps {
@@ -78,7 +78,7 @@ export function DimensionalSidebar({
 
   // Create particle effect when clicking icons
   const createParticles = (x: number, y: number) => {
-    const newParticles = []
+    const newParticles:any = []
     const colors = isDark
       ? [
           "rgba(129, 140, 248, 0.8)", // indigo
@@ -249,44 +249,6 @@ export function DimensionalSidebar({
 
       {/* Navigation Icons */}
       <div className="flex flex-col space-y-4 xs:space-y-5 sm:space-y-6">
-        {isAgenda && 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button
-                className={getIconStyles("schedule").container}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => handleIconClick("schedule", e)}
-                onMouseEnter={() => setHoveredIcon("schedule")}
-                onMouseLeave={() => setHoveredIcon(null)}
-              >
-                <Clock className={getIconStyles("schedule").icon} />
-
-                {/* Animated ring for active state */}
-                {activeIcon === "schedule" && (
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl xs:rounded-2xl border border-white/30 dark:border-white/30"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      rotate: [0, 90],
-                    }}
-                    transition={{ duration: 0.3 }}
-                  />
-                )}
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-gray-200/50 dark:border-white/10 text-gray-800 dark:text-white"
-            >
-              Agenda
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>}
-
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

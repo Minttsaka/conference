@@ -48,6 +48,8 @@ import { getMeeting } from "@/lib/api"
 import ChatPage from "../demo/ChatMessage"
 import SlidePresentation from "../slides/SlidePresentation"
 import FuturisticLoading from "../loading/FuturisticLoading"
+import { AgendaButton } from "../agenda/AgendaTriggerButton"
+
 
 export function VideoRoom({ meetingId , user }: VideoRoomProps) {
   const [copied, setCopied] = useState(false)
@@ -78,6 +80,13 @@ const { theme, setTheme } = useTheme()
     return window.location.href = `/join/${meeting?.id}`
   }
 
+  useEffect(()=>{
+    (async () => {
+        setIsLoading(true)
+        setMeeting((await getMeeting(meetingId)).meeting)
+      })();
+  },[])
+
   const {
     client,
     localVideoTrack,
@@ -96,11 +105,12 @@ const { theme, setTheme } = useTheme()
     appId: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     channel: meetingId,
     token: "token",
+    user,
     uid: userId,
-    isHost:meeting?.user.id === user.userId
+    isHost:meeting?.host.id === user.userId
   })
 
-  const { raisedHands,sendReaction,toggleHand, pendingRequests } = useAgoraRTM({
+  const { raisedHands,toggleHand, pendingRequests } = useAgoraRTM({
     user,
     channel : meetingId,
   })
@@ -906,6 +916,7 @@ const { theme, setTheme } = useTheme()
                       </Tooltip>
                     </TooltipProvider>
                   </div>
+                  <AgendaButton meeting={meeting as Meeting} />
 
                   {/* Leave meeting button with dimensional effect */}
                   <TooltipProvider>
@@ -966,7 +977,7 @@ const { theme, setTheme } = useTheme()
                     </Button>
                   </div>
 
-                  <TabsContent value="chat" className="flex-1 h-full overflow-hidden flex flex-col">
+                  <TabsContent value="chat" className="flex-1 h-[calc(100vh-350px)]  overflow-hidden flex flex-col">
                     {/* <Chat user={user} meetingId={meetingId} /> */}
                     <ChatPage user={user} meetingId={meetingId} />
                   </TabsContent>
@@ -1006,6 +1017,7 @@ const { theme, setTheme } = useTheme()
           onDecline={()=>setShowHandRaiseRequests(false)}
         />
       )}
+      
     </div>
   )
 }

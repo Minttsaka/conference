@@ -4,6 +4,7 @@ export type Message = {
   text: string
   sender: string
   senderId: string
+  channelName:string
   timestamp: Date
   isCurrentUser: boolean
   reactions: { emoji: string; userId: string }[]

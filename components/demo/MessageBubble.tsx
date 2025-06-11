@@ -226,7 +226,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
                     className="w-auto p-0 border-cyan-900 bg-black/90 backdrop-blur-xl shadow-xl"
                     side="left"
                   >
-                    <Picker onEmojiSelect={(emoji: any) => addReaction(message.id, emoji.native)} />
+                    {/* <Picker onEmojiSelect={(emoji: any) => addReaction(message.id, emoji.native)} /> */}
                   </PopoverContent>
                 </Popover>
               </div>

@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Message {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   messageId String @unique
@@ -22,9 +21,9 @@ model Message {
   updatedAt DateTime   @updatedAt
   userId     String
   room      String
-  roomId    String     @db.ObjectId
+  roomId    String     
   replyTo   Message?   @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replyToId String?    @db.ObjectId
+  replyToId String?    
   replies   Message[]  @relation("ReplyTo")
   reactions MessageReaction[]
   file      File?
@@ -36,7 +35,7 @@ model MessageReaction {
   createdAt DateTime @default(now())
   userId    String
   message   Message  @relation(fields: [messageId], references: [id])
-  messageId String   @db.ObjectId
+  messageId String   
 
   @@unique([userId, messageId, emoji])
 }

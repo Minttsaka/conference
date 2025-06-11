@@ -33,14 +33,35 @@ export interface User {
     uid: string | null
   }
 
-  
+  export type MeetingStatus = "pending" | "in-progress" | "completed" | "skipped"
+export type MeetingPriority = "low" | "medium" | "high"
+
+export interface AgendaItem {
+  id: string
+  title: string
+  duration: number // in minutes
+  description?: string
+  presenter?: string
+  status: MeetingStatus
+  priority: MeetingPriority
+  notes?: string
+  meetingId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 
   export type Meeting = {
     id: string;
     hostId: string;
     topic: string;
-    user:any,
+    host: {
+        id:string,
+        name:string,
+        email:string,
+      },
     lesson?:any
+    agendaItems?:AgendaItem[]
     type:"LESSON" | " MEETING"
     agenda:boolean,
     description: string;

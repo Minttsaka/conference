@@ -13,12 +13,20 @@ import { useRouter } from 'next/navigation'
 import type { Message, TranscriptionSettings } from "@/types/room"
 import { getOrCreateUserId } from '@/lib/userGn'
 import { enhanceTranscriptionAction } from '@/lib/action'
-import { publishMessage } from '@/components/demo/agora'
+import { SessionPayload } from '@/lib/session'
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 export interface UseAgoraProps {
   appId: string
   channel: string
   token: string
+  user: SessionPayload
   uid?: string
   isHost:boolean
 }
@@ -44,7 +52,7 @@ export interface UseAgoraReturn {
 
 const VOLUME_THRESHOLD = 50 // Adjust this value based on testing
 
-export function useAgora({ appId, channel, token, uid, isHost }: UseAgoraProps): UseAgoraReturn {
+export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraProps): UseAgoraReturn {
   const [client, setClient] = useState<IAgoraRTCClient | null>(null)
   const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null)
   const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null)
@@ -68,8 +76,6 @@ export function useAgora({ appId, channel, token, uid, isHost }: UseAgoraProps):
   const joinInProgress = useRef(false)
   const volumeDetectionInterval = useRef<NodeJS.Timeout>()
 
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const audioProcessorRef = useRef<ScriptProcessorNode | null>(null)
   const recognitionRef = useRef<any>(null) // WebSpeechAPI recognition object
 
   useEffect(() => {
@@ -391,8 +397,8 @@ export function useAgora({ appId, channel, token, uid, isHost }: UseAgoraProps):
           // Add message
           const newMessage: Message = {
             id: crypto.randomUUID(),
-            participantId: getOrCreateUserId(),
-            participantName: getOrCreateUserId().split("-")[4],
+            participantId: getOrCreateUserId(user),
+            participantName: getOrCreateUserId(user).split("-")[4],
             text: processedText,
             timestamp: new Date(),
           };
