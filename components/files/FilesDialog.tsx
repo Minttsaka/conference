@@ -42,7 +42,7 @@ interface FilesDialogProps {
   userName: string
 }
 
-export function FilesDialog({ isOpen, onClose,channelName,rtm, user, userId, userName }: FilesDialogProps) {
+export function FilesDialog({ isOpen, onClose,channelName,rtm, userId, userName }: FilesDialogProps) {
  
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")

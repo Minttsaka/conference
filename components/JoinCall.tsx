@@ -13,8 +13,14 @@ import NotExist from "./loading/NotExist"
 import EarlyVisit from "./loading/EarlyVisit"
 import LateVisit from "./loading/LateVisit"
 import FuturisticLoading from "./loading/FuturisticLoading"
+import { useSession } from "@/lib/client-session"
 
-export default function JoinCall({ id, user }: { id: string, user:SessionPayload }) {
+export default function JoinCall({ 
+  id,
+}: { 
+  id: string,
+  //  user:SessionPayload 
+  }) {
   const [displayName, setDisplayName] = useState("")
   const [meeting, setMeeting] = useState<Meeting>()
   const [isGlitching, setIsGlitching] = useState(false)
@@ -22,6 +28,16 @@ export default function JoinCall({ id, user }: { id: string, user:SessionPayload
   const [permissionError, setPermissionError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { user, loading, logout } = useSession()
+
+  useEffect(() => {
+    if (!loading && !user) {
+       if (!loading && !user) {
+      // Use Next.js router for client-side navigation
+      window.location.href = `http://localhost:3000/i/auth/${meeting}`
+    }
+    }
+  }, [user, loading, id])
 
   const combineDateAndTime = (startDate: string | Date, startTime: string | Date): Date => {
     // Ensure we're working with Date objects
@@ -123,7 +139,7 @@ export default function JoinCall({ id, user }: { id: string, user:SessionPayload
       const response = await fetch("/api/video-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channelName: id, uid: getOrCreateUserId(user), userRole: "student" }),
+        body: JSON.stringify({ channelName: id, uid: getOrCreateUserId(user as SessionPayload), userRole: "student" }),
       })
 
       const data = await response.json()

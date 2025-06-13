@@ -19,7 +19,6 @@ export async function  sendMail({
         pass: "unta ipmu yzlo ivkp"  // Your Gmail password or App Password
     }
 });
-  console.log(from)
 
   try {
     const testResult = await transport.verify();

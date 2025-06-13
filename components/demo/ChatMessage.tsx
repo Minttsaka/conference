@@ -4,8 +4,9 @@ import { useEffect, useState } from "react"
 import { initializeAgoraRTM } from "../../lib/agora"
 import { VideoRoomProps } from "@/types/video"
 import ChatInterface from "../futuristicChat/ChatInterface"
+import { SessionPayload } from "@/lib/session"
 
-export default function ChatPage({ user, meetingId }: VideoRoomProps) {
+export default function ChatPage({ user, meetingId }: {user:SessionPayload, meetingId:string}) {
   const [rtm, setRtm] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 

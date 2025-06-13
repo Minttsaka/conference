@@ -49,9 +49,15 @@ import ChatPage from "../demo/ChatMessage"
 import SlidePresentation from "../slides/SlidePresentation"
 import FuturisticLoading from "../loading/FuturisticLoading"
 import { AgendaButton } from "../agenda/AgendaTriggerButton"
+import { useSession } from "@/lib/client-session"
+import { SessionPayload } from "@/lib/session"
 
 
-export function VideoRoom({ meetingId , user }: VideoRoomProps) {
+export function VideoRoom({ 
+  meetingId 
+  // , user 
+}: 
+  VideoRoomProps) {
   const [copied, setCopied] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -62,7 +68,16 @@ export function VideoRoom({ meetingId , user }: VideoRoomProps) {
   const [showHandRaiseRequests, setShowHandRaiseRequests] = useState(false)
   const [isOpen, setIsOpen] = useState(true)
   const [isSlidesOpen, setIsSlidesOpen] = useState(false)
-   const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const { user, loading, logout } = useSession()
+  
+
+    useEffect(() => {
+    if (!loading && !user) {
+      // Use Next.js router for client-side navigation
+      window.location.href = `http://localhost:3000/i/auth/${meeting}`
+    }
+  }, [user, loading, meetingId])
 
 const screenClientRef = useRef<any>(null)
 
@@ -74,7 +89,7 @@ const { theme, setTheme } = useTheme()
 
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
-  const userId = getOrCreateUserId(user)
+  const userId = getOrCreateUserId(user as SessionPayload)
 
   if(!token){
     return window.location.href = `/join/${meeting?.id}`
@@ -105,13 +120,13 @@ const { theme, setTheme } = useTheme()
     appId: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     channel: meetingId,
     token: "token",
-    user,
+    user : user as SessionPayload,
     uid: userId,
-    isHost:meeting?.host.id === user.userId
+    isHost:meeting?.host.id === user?.userId
   })
 
   const { raisedHands,toggleHand, pendingRequests } = useAgoraRTM({
-    user,
+    user : user as SessionPayload,
     channel : meetingId,
   })
 
@@ -203,7 +218,7 @@ const { theme, setTheme } = useTheme()
   const generateToken = async () => {
 
     try {
-      const userId = getOrCreateUserId(user)
+      const userId = getOrCreateUserId(user as SessionPayload)
       const id = `${userId}*&$screen`
       const response = await fetch('/api/video-token', {
         method: 'POST',
@@ -311,7 +326,7 @@ const { theme, setTheme } = useTheme()
       <DimensionalSidebar
         isAgenda={meeting?.agenda as boolean}
         channel={meetingId}
-        user={user} isChatOpen={isChatOpen} 
+        user={user as SessionPayload} isChatOpen={isChatOpen} 
         setIsSlidesOpen={setIsSlidesOpen}
         setIsChatOpen={setIsChatOpen}
         meetingType={meeting?.type as "LESSON" | "MEETING"}
@@ -979,7 +994,7 @@ const { theme, setTheme } = useTheme()
 
                   <TabsContent value="chat" className="flex-1 h-[calc(100vh-350px)]  overflow-hidden flex flex-col">
                     {/* <Chat user={user} meetingId={meetingId} /> */}
-                    <ChatPage user={user} meetingId={meetingId} />
+                    <ChatPage user={user as SessionPayload} meetingId={meetingId} />
                   </TabsContent>
 
                   <TabsContent value="participants" className="h-full overflow-y-auto">
