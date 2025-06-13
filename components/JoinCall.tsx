@@ -34,7 +34,7 @@ export default function JoinCall({
     if (!loading && !user) {
        if (!loading && !user) {
       // Use Next.js router for client-side navigation
-      window.location.href = `http://localhost:3000/i/auth/${meeting}`
+      window.location.href = `${process.env.NEXT_PUBLIC_MAIN_APP_URL}/i/auth/${id}`
     }
     }
   }, [user, loading, id])
