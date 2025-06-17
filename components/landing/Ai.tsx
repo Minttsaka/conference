@@ -17,8 +17,8 @@ export default function AiPage() {
         <span className="rounded-lg bg-green-100 px-4 py-2">Convert Speech to Text Instantly</span>
       </h1>
 
-      <Button className="mt-8 rounded-full bg-navy-900 px-8 py-6 text-lg font-semibold text-white hover:bg-navy-800">
-        TRY FOR FREE
+      <Button className="mt-8 rounded-full  px-8 py-6 text-lg text-white hover:bg-navy-800">
+        Get Started
       </Button>
 
       {/* Stats */}

@@ -3,7 +3,7 @@ import type {  ILocalAudioTrack, ILocalVideoTrack, IMicrophoneAudioTrack, IRemot
 
 export interface VideoRoomProps {
   meetingId: string
-  // user:SessionPayload
+  user:SessionPayload
 }
 
 // export interface VideoStreamProps {

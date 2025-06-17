@@ -7,21 +7,18 @@ export async function POST(request: Request) {
 
     const messageData = await request.json()
 
-    // Validate required fields
     if (!messageData.id || !messageData.text || !messageData.senderId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Create the message in database
     const message = await prisma.message.create({
       data: {
-        messageId: messageData.id, // Use the client-generated ID as messageId
+        messageId: messageData.id, 
         text: messageData.text,
         userId: messageData.senderId,
-        room: messageData.channelName, // You'll need to pass this or extract from somewhere
-        roomId: messageData.channelName, // Assuming channelName is the roomId
+        room: messageData.channelName,
+        roomId: messageData.channelName, 
         replyToId: messageData.replyToId || null,
-        // Note: file handling would need additional logic if you're storing file info
       },
       include: {
         replyTo: {
@@ -33,6 +30,19 @@ export async function POST(request: Request) {
         }
       }
     })
+
+    if(message.replyToId) {
+      await prisma.message.update({
+        where: { messageId: message.replyToId },
+        data: {
+          replyTo: {
+            connect: {
+              id: message.id
+            }
+          }
+        }
+      })
+    }
 
     return NextResponse.json({ 
       success: true, 

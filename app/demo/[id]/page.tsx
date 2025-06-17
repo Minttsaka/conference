@@ -1,17 +1,19 @@
-import { VideoRoom } from '@/components/chat/VideoRoom'
-// import { getSession, SessionPayload } from '@/lib/session'
+import { VideoRoom } from '@/components/chat/demo-file'
+import { user } from '@/lib/meeting'
 import React from 'react'
 
-export default async function page({params}:{ params: Promise<{ id: string }>}) {
 
-  // const session = await getSession()
+export default async function page({
+    params
+}:{ 
+    params: Promise<{ id: string }>
+}) {
 
   return (
     <div>
-     <VideoRoom 
-     meetingId={(await params).id} 
-    //  user = {session as SessionPayload} 
-     />
+      <VideoRoom 
+      meetingId={(await params).id} 
+        user = {user}  />
     </div>
   )
 }

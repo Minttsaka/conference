@@ -44,13 +44,12 @@ import { ParticipantsSection } from "./ParticipantsSection"
 import { SharedScreensSection } from "./SharedScreensSection"
 import { ConnectionStatusIndicator, ConnectionStatusIndicatorMobile } from "@/hook/useAgoraConnectionStatus"
 import { Meeting } from "@/types/clasroom"
-import { getMeeting } from "@/lib/api"
-import ChatPage from "../demo/ChatMessage"
 import SlidePresentation from "../slides/SlidePresentation"
-import FuturisticLoading from "../loading/FuturisticLoading"
 import { AgendaButton } from "../agenda/AgendaTriggerButton"
 import { SessionPayload } from "@/lib/session"
-import { dummyMeeting } from "@/lib/meeting"
+import MessageList from "../futuristicChat/MessageList"
+import MessageInput from "../futuristicChat/MessageInput"
+import { ScrollArea } from "../ui/scroll-area"
 
 
 export function VideoRoom({ 
@@ -61,7 +60,7 @@ export function VideoRoom({
   const [copied, setCopied] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [meeting, setMeeting] = useState<Meeting>(dummyMeeting)
+  const [meeting, setMeeting] = useState<Meeting>()
   const [maximizedParticipant, setMaximizedParticipant] = useState<string | null>(null)
   const [screenTrack, setScreenTrack] = useState<any>(null)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
@@ -82,16 +81,16 @@ const { theme, setTheme } = useTheme()
   const token = searchParams.get("token")
   const userId = getOrCreateUserId(user as SessionPayload)
 
-  if(!token){
-    return window.location.href = `/join/${meeting?.id}`
-  }
+  // if(!token){
+  //   return window.location.href = `/join/${meeting?.id}`
+  // }
 
-  useEffect(()=>{
-    (async () => {
-      setIsLoading(true)
-      setMeeting((await getMeeting(meetingId)).meeting)
-    })();
-  },[])
+  // useEffect(()=>{
+  //   (async () => {
+  //     setIsLoading(true)
+  //     setMeeting((await getMeeting(meetingId)).meeting)
+  //   })();
+  // },[])
 
   const {
     client,
@@ -102,7 +101,6 @@ const { theme, setTheme } = useTheme()
     joinChannel,
     leaveChannel,
     toggleAudio,
-    messages,
     settings,
     toggleVideo,
     setupEventListeners,
@@ -116,10 +114,23 @@ const { theme, setTheme } = useTheme()
     isHost:meeting?.host.id === user?.userId
   })
 
-  const { raisedHands,toggleHand, pendingRequests } = useAgoraRTM({
-    user : user,
-    channel : meetingId,
-  })
+  const { 
+    raisedHands,
+    toggleHand,
+     pendingRequests ,
+     messages,
+     messagesEndRef,
+     sendReaction,
+     setReplyingTo,
+     replyingTo,
+     typingTimeoutRef,
+     addReaction,
+     sendMessage,
+     handleTyping
+    } = useAgoraRTM({
+        user : user,
+        channel : meetingId,
+      })
 
   useEffect(() => {
     
@@ -149,18 +160,6 @@ const { theme, setTheme } = useTheme()
   }
 
   useEffect(() => {
-
-    try {
-      (async () => {
-        setIsLoading(true)
-        setMeeting((await getMeeting(meetingId)).meeting)
-      })();
-    } catch (error) {
-      console.log(error)
-      
-    } finally {
-      setIsLoading(false)
-    }
     
     if (token && client) {
       setupEventListeners(client)
@@ -169,10 +168,7 @@ const { theme, setTheme } = useTheme()
 
   }, [token, client, joinChannel, leaveChannel, setupEventListeners])
 
-  if (isLoading) {
-    return <FuturisticLoading />
-  }
-  
+
 
   const isMuted = localAudioTrack ? !localAudioTrack.enabled : true
   const isVideoOff = localVideoTrack ? !localVideoTrack.enabled : true
@@ -233,7 +229,6 @@ const { theme, setTheme } = useTheme()
       console.error('Error generating token:', error);
     }
   };
-
 
   const toggleScreenShare = async () => {
     try {
@@ -614,7 +609,6 @@ const { theme, setTheme } = useTheme()
                       audioTrack={localAudioTrack}
                       isMaximized={true}
                       userAvatar=""
-                      messages= {messages}
                       settings = {settings}
                       onMuteRemoteUser={()=>{}}
                       onToggleMaximize={()=>{}}
@@ -960,7 +954,7 @@ const { theme, setTheme } = useTheme()
           <AnimatePresence>
             {isChatOpen && (
               <motion.div
-                className="absolute inset-x-0 md:static md:w-80 border-l dark:border-gray-800 flex flex-col h-full bg-white dark:bg-gray-900"
+                className="absolute inset-x-0 md:static md:w-96 border-l dark:border-gray-800 flex flex-col h-full bg-white dark:bg-gray-900"
                 initial={{ x: 300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
@@ -986,9 +980,25 @@ const { theme, setTheme } = useTheme()
                     </Button>
                   </div>
 
-                  <TabsContent value="chat" className="flex-1 h-[calc(100vh-350px)]  overflow-hidden flex flex-col">
-                    {/* <Chat user={user} meetingId={meetingId} /> */}
-                    <ChatPage user={user as SessionPayload} meetingId={meetingId} />
+                  <TabsContent value="chat" className="flex-1 h-[calc(100vh-350px)] bg-gray-950  overflow-hidden flex flex-col">
+                    <ScrollArea className="flex-1 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-cyan-900 scrollbar-track-transparent p-4">
+                      <MessageList
+                        messages={messages}
+                        setReplyingTo={setReplyingTo}
+                        addReaction={addReaction}
+                        currentUserId={user.userId}
+                      />
+                      <div ref={messagesEndRef} />
+                    </ScrollArea>
+              
+                    <div className="relative">
+                      <MessageInput
+                        onSendMessage={sendMessage}
+                        onTyping={handleTyping}
+                        replyingTo={replyingTo}
+                        setReplyingTo={setReplyingTo}
+                      />
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="participants" className="h-full overflow-y-auto">

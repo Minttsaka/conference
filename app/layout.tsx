@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "./ThemeProvider";
-//import { Manrope } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { Toaster } from "sonner";
 
-// const manrope = Manrope({
-//   weight: ['400', '700'],
-//   subsets: ['latin'],
-// });
+const manrope = Manrope({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-      //  className={manrope.className}
+       className={manrope.className}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}

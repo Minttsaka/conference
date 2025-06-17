@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { formatTime, getInitials } from "@/lib/utils"
-import Picker from "emoji-picker-react"
 import { Message } from "@/types/message"
+import { EmojiPicker } from "./EmojiPicker"
 
 type MessageProps = {
   message: Message
@@ -24,10 +24,10 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
+      className={`flex ${message.senderId === currentUserId ? "justify-end" : "justify-start"}`}
     >
       <div className="flex gap-2 group">
-        {!message.isCurrentUser && (
+        {message.senderId !== currentUserId && (
           <div className="relative">
             <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-sm"></div>
             <Avatar className="h-8 w-8 mt-1 border border-cyan-500/50 relative z-10">
@@ -39,7 +39,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
 
         <div className="flex flex-col">
           {/* Sender name above message for current user */}
-          {message.isCurrentUser && (
+          {message.senderId === currentUserId && (
             <div className="text-right font-mono text-[8px] mb-1 text-cyan-400/80 pr-1 tracking-wider uppercase">
               {message.sender}
             </div>
@@ -47,28 +47,28 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
 
           <div
             className={`p-3.5 relative ${
-              message.isCurrentUser ? "bg-black/80 text-cyan-50 shadow-lg" : "bg-black/80 text-cyan-50 shadow-lg"
+              message.senderId === currentUserId ? "bg-black/80 text-cyan-50 shadow-lg" : "bg-black/80 text-cyan-50 shadow-lg"
             }`}
             style={{
-              clipPath: message.isCurrentUser
+              clipPath: message.senderId === currentUserId
                 ? "polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%)"
                 : "polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 85%)",
               backdropFilter: "blur(12px)",
-              borderTop: message.isCurrentUser
+              borderTop: message.senderId === currentUserId
                 ? "1px solid rgba(6, 182, 212, 0.5)"
                 : "1px solid rgba(6, 182, 212, 0.3)",
-              borderLeft: !message.isCurrentUser ? "1px solid rgba(6, 182, 212, 0.3)" : "none",
-              borderRight: message.isCurrentUser ? "1px solid rgba(6, 182, 212, 0.3)" : "none",
+              borderLeft: message.senderId !== currentUserId ? "1px solid rgba(6, 182, 212, 0.3)" : "none",
+              borderRight: message.senderId === currentUserId ? "1px solid rgba(6, 182, 212, 0.3)" : "none",
             }}
           >
             {/* Glowing border effect */}
             <div
               className="absolute inset-0 -z-10 opacity-30"
               style={{
-                background: message.isCurrentUser
+                background: message.senderId === currentUserId
                   ? "linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(14, 165, 233, 0.2))"
                   : "linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(14, 165, 233, 0.1))",
-                boxShadow: message.isCurrentUser
+                boxShadow: message.senderId === currentUserId
                   ? "0 0 15px rgba(6, 182, 212, 0.3)"
                   : "0 0 10px rgba(6, 182, 212, 0.2)",
               }}
@@ -84,7 +84,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
             ></div>
 
             {/* Sender name inside message for non-current user */}
-            {!message.isCurrentUser && (
+            {message.senderId !== currentUserId && (
               <div className="font-mono text-[8px] mb-1.5 text-cyan-400 uppercase tracking-wider">
                 {message.sender}
                 <div className="h-px w-12 bg-gradient-to-r from-cyan-500/50 to-transparent mt-1"></div>
@@ -105,7 +105,6 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
                 <div className="truncate mt-1">{message.replyTo}</div>
               </div>
             )}
-
             <p className="leading-relaxed text-[10px] break-words whitespace-pre-wrap max-w-[300px] font-light">
               {message.text}
             </p>
@@ -215,7 +214,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
                     className="w-auto p-0 border-cyan-900 bg-black/90 backdrop-blur-xl shadow-xl"
                     side="left"
                   >
-                    {/* <Picker onEmojiSelect={(emoji: any) => addReaction(message.id, emoji.native)} /> */}
+                  <EmojiPicker onEmojiSelect={(emoji) => addReaction(message.id, emoji)} />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -223,7 +222,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
           </div>
         </div>
 
-        {message.isCurrentUser && (
+        {message.senderId === currentUserId && (
           <div className="relative">
             <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-sm"></div>
             <Avatar className="h-8 w-8 mt-1 border border-cyan-500/50 relative z-10">

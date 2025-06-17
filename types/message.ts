@@ -4,6 +4,7 @@ export type Message = {
   text: string
   sender: string
   senderId: string
+  type:string,
   channelName:string
   timestamp: Date
   isCurrentUser: boolean

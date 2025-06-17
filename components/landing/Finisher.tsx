@@ -2,36 +2,31 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
+import Link from "next/link"
 
 export default function Finisher() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className=" bg-white">
 
       {/* Hero Section */}
       <main className="mx-auto max-w-7xl px-4 py-16">
         <div className="relative">
-          {/* Version Badge */}
-          <Badge variant="outline" className="mb-8 rounded-full px-4 py-1">
-            RC version Soon!
-          </Badge>
-
           <div className="grid gap-12 lg:grid-cols-2">
             <div className="space-y-8">
               <h1 className="text-5xl  tracking-tight text-gray-900 lg:text-6xl">
-                AI-Powered
+                Revolutionize
                 <div className="relative inline-block">
                   <div className="absolute -inset-1">
                     <div className="h-full w-full rounded-lg bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-30 blur-lg"></div>
                   </div>
-                  <span className="relative md:ml-2">Education</span>
+                  <span className="relative md:ml-2">your team</span>
                 </div>
                 <br />
-                Solution★
+                meetings★
               </h1>
 
               <p className="text-lg text-gray-600">
-                Our AI system offers human-like voice, infinite memory, and autonomous operations, setting a new
-                standard in customer interaction
+                Our platform offers high quality video and audio conferencing features to make your meetings productive and engaging.
               </p>
 
               <div className="flex flex-wrap gap-6">
@@ -41,18 +36,21 @@ export default function Finisher() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-600">100% Secure</span>
+                  <span className="text-gray-600">Secure</span>
                 </div>
               </div>
 
               <Button className="rounded-full bg-black px-8 py-6 text-lg font-medium text-white hover:bg-gray-800">
-                Get Started
+
+                <Link href={'https://xtremeregion.com/i/meeting'}>
+                  Get Started
+                </Link>
               </Button>
             </div>
           </div>
 
           {/* Stats Section */}
-          <div className="mt-16 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
+          {/* <div className="mt-16 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
             <div className="relative p-8">
               <div className="absolute inset-0">
                 <svg className="h-full w-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,7 +98,7 @@ export default function Finisher() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </main>
     </div>

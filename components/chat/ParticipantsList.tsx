@@ -201,15 +201,15 @@ export function ParticipantsList({
   }
 
   return (
-    <div className="flex flex-col items-center h-full  overflow-hidden transition-all duration-500 ease-in-out px-1 py-2">
+    <div className="flex flex-col w-full items-center h-full  overflow-hidden transition-all duration-500 ease-in-out px-1 py-2">
       {/* Header with animated count */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center w-full justify-between">
+        <div className="flex items-center w-full space-x-2">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="relative"
+            className="relative "
           >
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/30 dark:to-purple-500/30 blur-sm"></div>
             <div className="relative bg-white dark:bg-gray-800 rounded-full px-2.5 py-1 shadow-sm border border-gray-200/50 dark:border-gray-700/50">
@@ -222,7 +222,7 @@ export function ParticipantsList({
         </div>
 
         {/* Filter buttons */}
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 w-full">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -304,7 +304,7 @@ export function ParticipantsList({
       </div>
 
       {/* Search input */}
-      <div className="relative">
+      <div className="relative my-2 w-full">
         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 blur-sm"></div>
         <input
           type="text"
@@ -316,7 +316,7 @@ export function ParticipantsList({
       </div>
 
       {/* Participants list with dimensional cards */}
-      <div className="space-y-3 mt-2 h-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="space-y-3 mt-2 h-full w-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
         <AnimatePresence>
           {filteredUsers.map((user, index) => (
             <motion.div

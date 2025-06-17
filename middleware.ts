@@ -4,7 +4,7 @@ import { decrypt } from "./lib/session"
 // All routes in the conference app require authentication except login
 const publicRoutes = ["/login"]
 
-const allowedOrigin = ['http://localhost:3002','http://localhost:3000','https://www.google.com' ]
+const allowedOrigins = ['http://localhost:3001','http://localhost:3000','https://www.google.com' ]
 
 
 export async function middleware(request: NextRequest) {
@@ -14,13 +14,21 @@ export async function middleware(request: NextRequest) {
 
   const origin = request.headers.get('origin')
 
-  if (origin && !allowedOrigin.includes(origin)){
-    return new NextResponse(null, {
-      status: 400,
-      statusText: 'bad equest',
-      headers:{'Content-Type':'text/plain'}
-    })
-  }
+    if (origin && request.method !== 'GET' && !allowedOrigins.includes(origin)) {
+      // Add environment URL if it exists
+      const envUrl = process.env.NEXT_PUBLIC_AUTH_URL;
+      if (envUrl && !allowedOrigins.includes(envUrl)) {
+        allowedOrigins.push(envUrl);
+      }
+      
+      if (!allowedOrigins.includes(origin)) {
+        return new NextResponse(null, {
+          status: 400,
+          statusText: 'Bad Request',
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+    }
 
   // Get the session from the cookie
   const session = request.cookies.get("session")?.value

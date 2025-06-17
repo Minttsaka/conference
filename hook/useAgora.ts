@@ -76,8 +76,6 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
   const joinInProgress = useRef(false)
   const volumeDetectionInterval = useRef<NodeJS.Timeout>()
 
-  const recognitionRef = useRef<any>(null) // WebSpeechAPI recognition object
-
   useEffect(() => {
     const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8',role: 'host' })
     setClient(client)
@@ -168,10 +166,6 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
       })
 
     })
-
- 
-      // Initialize speech recognition
-    initializeSpeechRecognition()
   }, [])
 
   const joinChannel = useCallback(async () => {
@@ -194,16 +188,22 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
         screenVideoTrack.close()
       }
 
-      // Leave any existing channel
       if (client.connectionState === 'CONNECTED') {
         await client.leave()
       }
 
-      // Join with retry logic
       let retries = 3
       while (retries > 0) {
         try {
           await client.join(appId, channel, token, uid)
+            if(isHost){
+              client.setClientRole("host", {
+              level: 1 
+            });
+          } else {
+            client.setClientRole("audience")
+          }
+          
           break
         } catch (error: any) {
           if (error.code === 'OPERATION_ABORTED' && retries > 1) {
@@ -223,7 +223,10 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
           sampleRate: 48000,
           stereo: true,
           bitrate: 128
-        }
+        },
+        AEC: true, // Acoustic Echo Cancellation
+        AGC: true, // Automatic Gain Control
+        ANS: true  // Automatic Noise Suppression
       }).catch(error => {
         console.error('Failed to create audio track:', error)
         return null
@@ -314,7 +317,7 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
       setSpeakingUsers(new Set())
       
       toast.success('Left the channel')
-      router.push('/start')
+      router.push('/join')
     } catch (error) {
       console.error('Error leaving channel:', error)
       toast.error('Failed to leave the channel')
@@ -347,86 +350,12 @@ export function useAgora({ appId, channel, user, token, uid, isHost }: UseAgoraP
 
   const shareLink = (classroomId:string) => {
     // Implement share link functionality here
-    const link = `http://localhost:3002/join/${classroomId}`;
+    const link = `${process.env.NEXT_PUBLIC_AUTH_URL}/join/${classroomId}`;
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   };
-
-  const initializeSpeechRecognition = useCallback(() => {
-    try {
-      if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
-        throw new Error("Speech recognition is not supported in this browser");
-      }
-  
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-  
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = settings.transcriptionLanguage;
-  
-      recognition.onresult = async (event: any) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-  
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        if (finalTranscript) {
-          let processedText = finalTranscript
-
-          // Apply AI enhancement if enabled
-          if (settings.aiEnhancement) {
-            try {
-              processedText = await enhanceTranscriptionAction(finalTranscript)
-            } catch (err) {
-              console.error("Error enhancing transcription:", err)
-              // Fall back to original text
-              processedText = finalTranscript
-            }
-          }
-
-          // Add message
-          const newMessage: Message = {
-            id: crypto.randomUUID(),
-            participantId: getOrCreateUserId(user),
-            participantName: getOrCreateUserId(user).split("-")[4],
-            text: processedText,
-            timestamp: new Date(),
-          };
-
-          setMessages((prev) => [...prev, newMessage])
-        }
-  
-        
-      };
-  
-      recognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
-        if (event.error === "no-speech") {
-          recognition.stop();
-          setTimeout(() => {
-            recognition.start();
-          }, 1000);
-        }
-      };
-  
-      recognition.start();
-      console.log("Speech recognition started");
-    } catch (err) {
-      console.error("Error initializing speech recognition:", err);
-    }
-  }, [settings.transcriptionLanguage]); // Removed getOrCreateUserId() from dependencies
-  
-  
 
   const updateSettings = useCallback((newSettings: Partial<TranscriptionSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))

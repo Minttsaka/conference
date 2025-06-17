@@ -14,7 +14,7 @@ export default function Home() {
       <LandingPage />
       <Affordability />
       <AiPage />
-      <Control />
+      {/* <Control /> */}
       <Finisher />
       <Footer />
     </div>

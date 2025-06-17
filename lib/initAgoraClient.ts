@@ -77,7 +77,7 @@ export type ReactionMessage = {
   senderName: string;
   senderAvatar : string,
   recipientId: string;
-  timestamp: string;
+  timestamp: number;
 };
 
 
@@ -91,7 +91,9 @@ export async function getAgoraToken(userId: string) {
       body: JSON.stringify({ userId }),
     })
     const data = await response.json()
+
     if (!response.ok) throw new Error(data.error)
+      
     return data.token
   } catch (error) {
     console.error('Error getting Agora token:', error)

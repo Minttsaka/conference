@@ -159,7 +159,7 @@ export default function MessageBubble({ message, index, setReplyingTo, addReacti
             >
               {message.reactions.length > 0 && (
                 <div
-                  className="px-2 py-0.5 text-[10px] z-50 flex items-center gap-1"
+                  className="px-2 py-0.5 text-[10px] flex items-center gap-1"
                   style={{
                     background: "rgba(0, 0, 0, 0.8)",
                     backdropFilter: "blur(4px)",

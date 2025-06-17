@@ -13,13 +13,13 @@ import NotExist from "./loading/NotExist"
 import EarlyVisit from "./loading/EarlyVisit"
 import LateVisit from "./loading/LateVisit"
 import FuturisticLoading from "./loading/FuturisticLoading"
-import { useSession } from "@/lib/client-session"
 
 export default function JoinCall({ 
   id,
+  user
 }: { 
   id: string,
-  //  user:SessionPayload 
+   user:SessionPayload 
   }) {
   const [displayName, setDisplayName] = useState("")
   const [meeting, setMeeting] = useState<Meeting>()
@@ -28,16 +28,6 @@ export default function JoinCall({
   const [permissionError, setPermissionError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { user, loading, logout } = useSession()
-
-  useEffect(() => {
-    if (!loading && !user) {
-       if (!loading && !user) {
-      // Use Next.js router for client-side navigation
-      window.location.href = `${process.env.NEXT_PUBLIC_MAIN_APP_URL}/i/auth/${id}`
-    }
-    }
-  }, [user, loading, id])
 
   const combineDateAndTime = (startDate: string | Date, startTime: string | Date): Date => {
     // Ensure we're working with Date objects
@@ -146,7 +136,7 @@ export default function JoinCall({
 
       if (response.ok) {
         const token = encodeURIComponent(data.token)
-        const url = `/demo/${id}?token=${token}`
+        const url = `/stream/${id}?token=${token}`
         return url
       } else {
         throw new Error(data.error)
@@ -209,10 +199,10 @@ export default function JoinCall({
                   autoPlay
                   playsInline
                   muted
-                  className={`w-full h-full object-cover ${!meeting?.muteVideo ? "hidden" : ""} ${isGlitching ? "glitch-video" : ""}`}
+                  className={`w-full h-full object-cover ${meeting?.muteVideo ? "hidden" : ""} ${isGlitching ? "glitch-video" : ""}`}
                 />
 
-                {!meeting?.muteVideo && (
+                {meeting?.muteVideo && (
                   <motion.div
                     className="absolute inset-0 flex items-center justify-center"
                     initial={{ opacity: 0 }}

@@ -38,9 +38,9 @@ export async function GET(req: NextRequest) {
     })
 
     const formattedMessages = messages.map(msg => ({
-      id: msg.messageId, // Use messageId as the client-side id
+      id: msg.messageId,
       text: msg.text,
-      sender: msg.userId, // You might want to join with User table to get actual name
+      sender: msg.userId,
       senderId: msg.userId,
       timestamp: msg.createdAt,
       isCurrentUser: true,
@@ -50,9 +50,8 @@ export async function GET(req: NextRequest) {
       })),
       replyTo: msg.replyTo?.text,
       replyToId: msg.replyTo?.messageId,
-      replyToSender: msg.replyTo?.userId, // You might want to get actual sender name
+      replyToSender: msg.replyTo?.userId,
       roomId: msg.roomId,
-      // file: msg.file // Add file handling if needed
     }))
 
     return NextResponse.json({ messages:formattedMessages }, { status: 200 })

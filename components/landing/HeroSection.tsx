@@ -1,9 +1,10 @@
 "use client"
 
-import Image from "next/image"
 import { motion } from "framer-motion"
-import { Star, Download, ChevronLeft, Grid2X2 } from "lucide-react"
+import { Star} from "lucide-react"
 import Link from "next/link"
+import Logo from "../Logo"
+import SponsorLogos from "./SponsorLogos"
 
 export default function HeroSection() {
   return (
@@ -12,26 +13,19 @@ export default function HeroSection() {
       <nav className="relative z-10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/im3-ws6PvyobA6T5s8B5D362oeyCyrfkBp.webp"
-              alt="GetPay Logo"
-              width={120}
-              height={40}
-              className="h-8 w-auto"
-            />
+            <div className="bg-white p-1 rounded-full shrink-0">
+              <Logo />
+            </div>
             <div className="hidden md:flex space-x-6 text-sm">
-              <a href="#" className="hover:text-gray-300">
-                HOME
-              </a>
-              <a href="#" className="hover:text-gray-300">
+              <Link href="#features" className="hover:text-gray-300">
                 FEATURES
-              </a>
-              <a href="#" className="hover:text-gray-300">
+              </Link>
+              <Link href="#" className="hover:text-gray-300">
                 WHY
-              </a>
-              <a href="#" className="hover:text-gray-300">
+              </Link>
+              <Link href="#" className="hover:text-gray-300">
                 PRICING
-              </a>
+              </Link>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -56,7 +50,7 @@ export default function HeroSection() {
             <Link href={'/join'} className="bg-green-500 text-white rounded-full px-8 py-3 text-sm font-medium hover:bg-green-400 transition-colors">
               Join a meeting
             </Link>
-            <Link href={'/start'} className="bg-white text-black rounded-full px-8 py-3 text-sm font-medium hover:bg-gray-100 transition-colors">
+            <Link href={'https://xtremeregion.com/i/schedule'} className="bg-white text-black rounded-full px-8 py-3 text-sm font-medium hover:bg-gray-100 transition-colors">
               Schedule
             </Link>
           </div>
@@ -73,7 +67,7 @@ export default function HeroSection() {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-indigo-500/20 blur-3xl"></div>
           <div className="relative w-full h-full flex items-center justify-center">
             <img
-              src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+              src="https://www.ringcentral.com/content/dam/rc-www/en_us/images/content/seo/online-meeting-software/online-meeting-software.jpg"
               alt="Virtual Conference"
               width={800}
               height={400}
@@ -86,24 +80,15 @@ export default function HeroSection() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-20">
           <div className="flex space-x-12">
             <div>
-              <h3 className="text-2xl font-light mb-1">2.3M+</h3>
+              <h3 className="text-2xl font-light mb-1">20+</h3>
               <p className="text-sm text-gray-400">Users</p>
             </div>
-            <div>
-              <h3 className="text-2xl font-light mb-1">4.9</h3>
-              <p className="text-sm text-gray-400">Ratings</p>
-            </div>
           </div>
-          <div className=" space-y-4">
+          <div className="flex flex-col justify-center items-center space-y-4">
               <p className="text-sm text-gray-600">
-                Trusted by 1,000,000+ marketing teams, agencies, and freelancers. 10,000+ 5-star ratings.
+                Trusted by well know companies .
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-8">
-                <div className="text-gray-400">asana</div>
-                <div className="text-gray-400">dokey.</div>
-                <div className="text-gray-400">Discord</div>
-                <div className="text-gray-400">ClickUp</div>
-              </div>
+              <SponsorLogos />
             </div>
           <button className="bg-black border border-gray-800 rounded-full px-6 py-3 text-sm flex items-center space-x-3">
             <img
@@ -131,14 +116,6 @@ export default function HeroSection() {
           </div>
           <div className="bg-[#111] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-8">
-              <div className="flex space-x-4">
-                <button className="p-2 rounded-full bg-black/50">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button className="p-2 rounded-full bg-black/50">
-                  <Grid2X2 className="w-4 h-4" />
-                </button>
-              </div>
               <div className="flex items-center bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-xs">
                 <Star className="text-yellow-300 fill-yellow-300"/>
                 <Star className="text-yellow-300 fill-yellow-300"/>
@@ -147,12 +124,8 @@ export default function HeroSection() {
             </div>
             <div className="flex justify-between items-center bg-gray-900 p-4 rounded-lg shadow-lg">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-1">Free, No Signup, and No Sign-in</h3>
-              <p className="text-sm text-gray-400">
-                💰 100% Free – No hidden fees, just instant access. <br />
-                🙅‍♂️ No Signup – Start a meeting instantly. <br />
-                🔑 No Sign-in – Join with a shared link, no hassle.
-              </p>
+              <h3 className="text-lg font-semibold text-white mb-1">Signup is required! Level up your game with us.</h3>
+             
             </div>
           </div>
 
